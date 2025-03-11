@@ -1,6 +1,6 @@
 const EnumUserRole = {
   USER: "USER",
-  HOST: "HOST",
+  DRIVER: "DRIVER",
   ADMIN: "ADMIN",
 };
 
@@ -11,7 +11,16 @@ const EnumPaymentType = {
   REFUNDED: "refunded",
 };
 
+const EnumSocketStatus = {
+  CONNECTION: "connection",
+  DISCONNECT: "disconnect",
+  ERROR: "error",
+  START_CHAT: "start_chat",
+  SEND_MESSAGE: "send_message",
+};
+
 module.exports = {
   EnumUserRole,
   EnumPaymentType,
+  EnumSocketStatus,
 };

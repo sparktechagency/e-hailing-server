@@ -2,22 +2,18 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = require("../app");
+const socketHandlers = require("../socket/socketHandlers");
+const socketCors = require("./socketCors");
+const { EnumSocketStatus } = require("../util/enum");
 
 const mainServer = http.createServer(app);
 
 const io = new Server(mainServer, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  },
+  cors: socketCors,
 });
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
+io.on(EnumSocketStatus.CONNECTION, (socket) => {
+  socketHandlers(socket);
 });
 
 module.exports = mainServer;
