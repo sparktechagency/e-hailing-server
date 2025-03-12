@@ -1,4 +1,4 @@
-const { EnumSocketStatus } = require("../util/enum");
+const { EnumSocketEvent } = require("../util/enum");
 
 const socketHandlers = (socket) => {
   console.log("a user connected");
@@ -7,7 +7,7 @@ const socketHandlers = (socket) => {
 
   console.log("hit", userId);
 
-  socket.on(EnumSocketStatus.DISCONNECT, () => {
+  socket.on(EnumSocketEvent.DISCONNECT, () => {
     console.log("user disconnected");
   });
 };
