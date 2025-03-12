@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const config = require("../../../config");
 const validator = require("validator");
+const { LoginProvider } = require("../../../util/enum");
 
 const { Schema, model } = mongoose;
 
@@ -22,12 +23,24 @@ const AuthSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       select: false,
+      required: function () {
+        return this.provider === LoginProvider.LOCAL;
+      },
+    },
+    provider: {
+      type: String,
+      enum: {
+        values: Object.values(LoginProvider),
+        message: `Invalid provider value. Allowed values: ${Object.values(
+          LoginProvider
+        ).join(", ")}`,
+      },
+      default: LoginProvider.LOCAL,
     },
     role: {
       type: String,
-      enum: ["USER", "ADMIN"],
+      enum: ["USER", "DRIVER", "ADMIN"],
       required: true,
     },
     isVerified: {
