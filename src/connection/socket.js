@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 const app = require("../app");
 const socketHandlers = require("../socket/socketHandlers");
 const socketCors = require("./socketCors");
-const { EnumSocketStatus } = require("../util/enum");
+const { EnumSocketEvent } = require("../util/enum");
 
 const mainServer = http.createServer(app);
 
@@ -12,7 +12,7 @@ const io = new Server(mainServer, {
   cors: socketCors,
 });
 
-io.on(EnumSocketStatus.CONNECTION, (socket) => {
+io.on(EnumSocketEvent.CONNECTION, (socket) => {
   socketHandlers(socket);
 });
 

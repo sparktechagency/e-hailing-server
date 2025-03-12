@@ -11,7 +11,7 @@ const EnumPaymentType = {
   REFUNDED: "refunded",
 };
 
-const EnumSocketStatus = {
+const EnumSocketEvent = {
   CONNECTION: "connection",
   DISCONNECT: "disconnect",
   ERROR: "error",
@@ -22,5 +22,5 @@ const EnumSocketStatus = {
 module.exports = {
   EnumUserRole,
   EnumPaymentType,
-  EnumSocketStatus,
+  EnumSocketEvent,
 };
