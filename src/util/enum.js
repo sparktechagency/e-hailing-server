@@ -19,8 +19,21 @@ const EnumSocketEvent = {
   SEND_MESSAGE: "send_message",
 };
 
+const LoginProvider = {
+  LOCAL: "local",
+  GOOGLE: "google",
+  APPLE: "apple",
+};
+
+const UserAccountStatus = {
+  VERIFIED: "verified",
+  UNVERIFIED: "unverified",
+};
+
 module.exports = {
   EnumUserRole,
   EnumPaymentType,
   EnumSocketEvent,
+  LoginProvider,
+  UserAccountStatus,
 };
