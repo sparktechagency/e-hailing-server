@@ -60,6 +60,17 @@ const loginAccount = catchAsync(async (req, res) => {
   });
 });
 
+const socialLogin = catchAsync(async (req, res) => {
+  const { message, ...others } = await AuthService.socialLogin(req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: message,
+    data: others,
+  });
+});
+
 const changePassword = catchAsync(async (req, res) => {
   await AuthService.changePassword(req.user, req.body);
   sendResponse(res, {
@@ -102,6 +113,7 @@ const AuthController = {
   registrationAccount,
   activateAccount,
   loginAccount,
+  socialLogin,
   changePassword,
   forgotPass,
   resetPassword,

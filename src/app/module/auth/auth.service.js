@@ -5,7 +5,7 @@ const { status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
 const config = require("../../../config");
 const { jwtHelpers } = require("../../../util/jwtHelpers");
-const { EnumUserRole } = require("../../../util/enum");
+const { EnumUserRole, LoginProvider } = require("../../../util/enum");
 const { logger } = require("../../../util/logger");
 const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
@@ -15,15 +15,20 @@ const validateFields = require("../../../util/validateFields");
 const EmailHelpers = require("../../../util/emailHelpers");
 
 const registrationAccount = async (payload) => {
-  const { role, name, password, confirmPassword, email } = payload;
-
   validateFields(payload, [
     "password",
     "confirmPassword",
     "email",
     "role",
     "name",
+    "provider",
   ]);
+
+  if (payload.provider !== LoginProvider.LOCAL)
+    throw new ApiError(status.BAD_REQUEST, "Invalid provider");
+
+  const { role, name, password, confirmPassword, email, emergencyPhoneNumber } =
+    payload || {};
 
   const { code: activationCode, expiredAt: activationCodeExpire } =
     codeGenerator(3);
@@ -80,6 +85,7 @@ const registrationAccount = async (payload) => {
     authId: auth._id,
     name,
     email,
+    ...(emergencyPhoneNumber && { emergencyPhoneNumber }),
   };
 
   if (role === EnumUserRole.ADMIN) await Admin.create(userData);
@@ -155,15 +161,9 @@ const activateAccount = async (payload) => {
     config.jwt.secret,
     config.jwt.expires_in
   );
-  const refreshToken = jwtHelpers.createToken(
-    tokenPayload,
-    config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in
-  );
 
   return {
     accessToken,
-    refreshToken,
   };
 };
 
@@ -210,15 +210,65 @@ const loginAccount = async (payload) => {
     config.jwt.expires_in
   );
 
-  const refreshToken = jwtHelpers.createToken(
+  return {
+    accessToken,
+  };
+};
+
+const socialLogin = async (payload) => {
+  validateFields(payload, ["email", "name", "role", "provider"]);
+
+  const { email, name, role, provider, profile_image, address } = payload || {};
+
+  if (provider === LoginProvider.LOCAL)
+    throw new ApiError(status.BAD_REQUEST, "Invalid provider");
+
+  let message = `${provider} login successful`;
+  let [auth, user] = await Promise.all([
+    Auth.isAuthExist(email),
+    User.findOne({ email }),
+  ]);
+
+  if (!auth) {
+    const authData = {
+      name,
+      email,
+      role,
+      provider,
+      isActive: true,
+    };
+
+    auth = await Auth.create(authData);
+
+    const userData = {
+      authId: auth._id,
+      name,
+      email,
+      ...(profile_image && { profile_image }),
+      ...(address && { address }),
+    };
+
+    user = await User.create(userData);
+
+    message = `Account created successfully`;
+  }
+
+  const tokenPayload = {
+    authId: auth._id,
+    userId: user._id,
+    email,
+    role,
+  };
+
+  const accessToken = jwtHelpers.createToken(
     tokenPayload,
-    config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in
+    config.jwt.secret,
+    config.jwt.expires_in
   );
 
   return {
     accessToken,
-    refreshToken,
+    message,
   };
 };
 
@@ -387,6 +437,7 @@ const AuthService = {
   activateAccount,
   forgetPassOtpVerify,
   resendActivationCode,
+  socialLogin,
 };
 
 module.exports = { AuthService };
