@@ -13,4 +13,5 @@
 9. notifications
 10. messages
 11. conversations
-12. payments
+12. coins
+13. payments

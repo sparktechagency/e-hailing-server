@@ -25,9 +25,15 @@ const LoginProvider = {
   APPLE: "apple",
 };
 
+const UserAccountStatus = {
+  VERIFIED: "verified",
+  UNVERIFIED: "unverified",
+};
+
 module.exports = {
   EnumUserRole,
   EnumPaymentType,
   EnumSocketEvent,
   LoginProvider,
+  UserAccountStatus,
 };
