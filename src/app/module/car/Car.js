@@ -1,17 +1,82 @@
+const { Schema, model } = require("mongoose");
+const ObjectId = Schema.Types.ObjectId;
 
-    const { Schema, model } = require("mongoose");
-    const ObjectId = Schema.Types.ObjectId;
-
-    const carSchema = new Schema(
-    {
-        
+const carSchema = new Schema(
+  {
+    brand: {
+      type: String,
+      required: true,
     },
-    {
-        timestamps: true,
-    }
-    );
+    model: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      required: true,
+    },
+    seats: {
+      type: Number,
+      required: true,
+    },
+    evpNumber: {
+      type: String,
+      required: true,
+    },
+    evpExpiry: {
+      type: String,
+      required: true,
+    },
+    carNumber: {
+      type: String,
+      required: true,
+    },
+    color: {
+      type: String,
+      required: true,
+    },
+    carLicensePlate: {
+      type: String,
+      required: true,
+    },
+    vin: {
+      type: String,
+      required: true,
+    },
+    registrationDate: {
+      type: String,
+      required: true,
+    },
+    car_image: {
+      type: [String],
+      required: true,
+    },
+    car_grant_image: {
+      type: String,
+      required: true,
+    },
+    car_insurance_image: {
+      type: String,
+      required: true,
+    },
+    e_hailing_car_permit_image: {
+      type: String,
+      required: true,
+    },
+    assignedTo: {
+      type: ObjectId,
+      ref: "Driver",
+    },
+    isAssigned: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-    const Car = model("Car", carSchema);
+const Car = model("Car", carSchema);
 
-    module.exports = Car;
-    
+module.exports = Car;

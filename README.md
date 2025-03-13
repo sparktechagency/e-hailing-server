@@ -1,3 +1,8 @@
+### missing in figma
+
+1. `seats`, `evpNumber`, `evpExpiry`, `carNumber` missing when adding a car in dashboard
+2. no need for driver id in the app
+
 ### questions
 
 ### collections
