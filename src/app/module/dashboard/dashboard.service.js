@@ -210,26 +210,13 @@ const editDriver = async (req) => {
   return updatedDriver;
 };
 
-const deleteDriver = async (userData, payload) => {
-  validateFields(payload, ["userId", "authId"]);
-
-  const deletedUser = await User.deleteOne({
-    _id: payload.userId,
-    employer: userData.userId,
-  });
-
-  if (!deletedUser.deletedCount)
-    throw new ApiError(status.NOT_FOUND, "Driver Not found");
-
-  const deletedAuth = await Auth.deleteOne({ _id: payload.authId });
-};
+// car management
 
 const DashboardService = {
   revenue,
   totalOverview,
   postDriver,
   editDriver,
-  deleteDriver,
 };
 
 module.exports = DashboardService;
