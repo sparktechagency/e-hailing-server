@@ -22,6 +22,17 @@ router
     auth(config.auth_level.admin),
     uploadFile(),
     DashboardController.postDriver
+  )
+  .patch(
+    "/edit-driver",
+    auth(config.auth_level.admin),
+    uploadFile(),
+    DashboardController.editDriver
+  )
+  .delete(
+    "/delete-driver",
+    auth(config.auth_level.admin),
+    DashboardController.deleteDriver
   );
 
 module.exports = router;

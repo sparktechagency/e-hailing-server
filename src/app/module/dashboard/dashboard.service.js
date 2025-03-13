@@ -4,6 +4,8 @@ const Auth = require("../auth/Auth");
 const User = require("../user/User");
 const EmailHelpers = require("../../../util/emailHelpers");
 const validateFields = require("../../../util/validateFields");
+const ApiError = require("../../../error/ApiError");
+const unlinkFile = require("../../../util/unlinkFile");
 
 // overview ========================
 const revenue = async (query) => {
@@ -168,52 +170,44 @@ const postDriver = async (req) => {
 };
 
 const editDriver = async (req) => {
-  const { body: payload, files, user: userData } = req;
+  validateFields(req.body, ["authId", "userId"]);
 
-  validateFields(payload, ["authId", "userId"]);
+  const { body, files = {} } = req;
+  const { email, password, name, userId, authId, ...otherFields } = body || {};
 
-  const { workingDay, ...others } = payload || {};
-
-  if (payload.email || payload.password)
+  if (email || password)
     throw new ApiError(status.BAD_REQUEST, "Email & Password can't be changed");
 
-  const updateData = {
-    ...(workingDay && {
-      workingDay: convertToArray(payload.workingDay),
-    }),
-    ...others,
-  };
-
-  const employee = await User.findOne({
-    _id: payload.userId,
-    authId: payload.authId,
+  const driver = await User.findOne({
+    _id: body.userId,
+    authId: body.authId,
   });
 
-  if (!employee) throw new ApiError(status.BAD_REQUEST, "Employee not found.");
+  if (!driver) throw new ApiError(status.BAD_REQUEST, "Driver not found.");
 
-  if (files && files.profile_image)
-    updateData.profile_image = files.profile_image[0].path;
+  const updateData = { name, ...otherFields };
 
-  const [auth, updatedEmployee] = await Promise.all([
-    Auth.findByIdAndUpdate(
-      payload.authId,
-      { firstName: updateData.firstName, lastName: updateData.lastName },
-      {
-        new: true,
-      }
-    ).lean(),
-    User.findByIdAndUpdate(
-      payload.userId,
-      { ...updateData },
-      {
-        new: true,
-      }
-    ).lean(),
+  const fileFields = [
+    { key: "profile_image", oldPath: driver.profile_image },
+    { key: "id_or_passport_image", oldPath: driver.id_or_passport_image },
+    { key: "psv_license_image", oldPath: driver.psv_license_image },
+    { key: "driving_license_image", oldPath: driver.driving_license_image },
+  ];
+
+  for (const { key, oldPath } of fileFields) {
+    if (files[key]) {
+      updateData[key] = files[key][0].path;
+      unlinkFile(oldPath);
+    }
+  }
+
+  const [updatedDriver] = await Promise.all([
+    User.findByIdAndUpdate(userId, updateData, { new: true }).lean(),
+
+    Auth.findByIdAndUpdate(authId, { name }, { new: true }).lean(),
   ]);
 
-  return {
-    updatedEmployee,
-  };
+  return updatedDriver;
 };
 
 const deleteDriver = async (userData, payload) => {
@@ -225,7 +219,7 @@ const deleteDriver = async (userData, payload) => {
   });
 
   if (!deletedUser.deletedCount)
-    throw new ApiError(status.NOT_FOUND, "Employee Not found");
+    throw new ApiError(status.NOT_FOUND, "Driver Not found");
 
   const deletedAuth = await Auth.deleteOne({ _id: payload.authId });
 };
