@@ -44,22 +44,11 @@ const editDriver = catchAsync(async (req, res) => {
   });
 });
 
-const deleteDriver = catchAsync(async (req, res) => {
-  const result = await DashboardService.deleteDriver(req.user, req.body);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Driver deleted successfully",
-    data: result,
-  });
-});
-
 const DashboardController = {
   totalOverview,
   revenue,
   postDriver,
   editDriver,
-  deleteDriver,
 };
 
 module.exports = DashboardController;
