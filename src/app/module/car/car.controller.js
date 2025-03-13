@@ -2,8 +2,8 @@ const CarService = require("./car.service");
 const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
 
-const createCar = catchAsync(async (req, res) => {
-  const result = await CarService.createCar(req.user, req.body);
+const postCar = catchAsync(async (req, res) => {
+  const result = await CarService.postCar(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -33,7 +33,7 @@ const getAllCars = catchAsync(async (req, res) => {
 });
 
 const updateCar = catchAsync(async (req, res) => {
-  const result = await CarService.updateCar(req.user, req.body);
+  const result = await CarService.updateCar(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -53,7 +53,7 @@ const deleteCar = catchAsync(async (req, res) => {
 });
 
 const CarController = {
-  createCar,
+  postCar,
   getCar,
   getAllCars,
   updateCar,

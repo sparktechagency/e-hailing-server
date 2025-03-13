@@ -46,6 +46,11 @@ const uploadFile = () => {
       "id_or_passport_image",
       "psv_license_image",
       "driving_license_image",
+
+      "car_image",
+      "car_grant_image",
+      "car_insurance_image",
+      "e_hailing_car_permit_image",
     ];
 
     // Allow requests without files (when there's no fieldname)
@@ -68,6 +73,11 @@ const uploadFile = () => {
     { name: "id_or_passport_image", maxCount: 1 },
     { name: "psv_license_image", maxCount: 1 },
     { name: "driving_license_image", maxCount: 1 },
+
+    { name: "car_image", maxCount: 5 },
+    { name: "car_grant_image", maxCount: 1 },
+    { name: "car_insurance_image", maxCount: 1 },
+    { name: "e_hailing_car_permit_image", maxCount: 1 },
   ]);
 
   return upload;
