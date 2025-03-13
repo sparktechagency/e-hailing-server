@@ -2,6 +2,7 @@ const auth = require("../../middleware/auth");
 const express = require("express");
 const DashboardController = require("./dashboard.controller");
 const config = require("../../../config");
+const { uploadFile } = require("../../middleware/fileUploader");
 
 const router = express.Router();
 
@@ -13,6 +14,25 @@ router
     auth(config.auth_level.admin),
     DashboardController.totalOverview
   )
-  .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue);
+  .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue)
+
+  // driver management
+  .post(
+    "/post-driver",
+    auth(config.auth_level.admin),
+    uploadFile(),
+    DashboardController.postDriver
+  )
+  .patch(
+    "/edit-driver",
+    auth(config.auth_level.admin),
+    uploadFile(),
+    DashboardController.editDriver
+  )
+  .delete(
+    "/delete-driver",
+    auth(config.auth_level.admin),
+    DashboardController.deleteDriver
+  );
 
 module.exports = router;

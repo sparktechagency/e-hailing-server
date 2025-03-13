@@ -30,6 +30,12 @@ const uploadFile = () => {
     },
     filename: function (req, file, cb) {
       const name = Date.now() + "-" + file.originalname;
+
+      // Store uploaded file paths in req.uploadedFiles for deletion in case of error or rollback needed
+      if (!req.uploadedFiles) req.uploadedFiles = [];
+      const filePath = `uploads/${file.fieldname}/${name}`;
+      req.uploadedFiles.push(filePath);
+
       cb(null, name);
     },
   });

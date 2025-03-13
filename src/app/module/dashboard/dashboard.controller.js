@@ -1,7 +1,8 @@
 const catchAsync = require("../../../util/catchAsync");
+const sendResponse = require("../../../util/sendResponse");
 const DashboardService = require("./dashboard.service");
 
-// overview ========================
+// overview
 const totalOverview = catchAsync(async (req, res) => {
   const result = await DashboardService.totalOverview();
   sendResponse(res, {
@@ -22,9 +23,43 @@ const revenue = catchAsync(async (req, res) => {
   });
 });
 
+// driver management
+const postDriver = catchAsync(async (req, res) => {
+  const result = await DashboardService.postDriver(req);
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Driver added successfully",
+    data: result,
+  });
+});
+
+const editDriver = catchAsync(async (req, res) => {
+  const result = await DashboardService.editDriver(req);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Driver updated successfully",
+    data: result,
+  });
+});
+
+const deleteDriver = catchAsync(async (req, res) => {
+  const result = await DashboardService.deleteDriver(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Driver deleted successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   revenue,
+  postDriver,
+  editDriver,
+  deleteDriver,
 };
 
 module.exports = DashboardController;

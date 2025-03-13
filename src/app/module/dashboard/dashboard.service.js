@@ -1,4 +1,11 @@
 const { default: status } = require("http-status");
+const { EnumUserRole } = require("../../../util/enum");
+const Auth = require("../auth/Auth");
+const User = require("../user/User");
+const EmailHelpers = require("../../../util/emailHelpers");
+const validateFields = require("../../../util/validateFields");
+const ApiError = require("../../../error/ApiError");
+const unlinkFile = require("../../../util/unlinkFile");
 
 // overview ========================
 const revenue = async (query) => {
@@ -102,6 +109,127 @@ const totalOverview = async () => {
   };
 };
 
-const DashboardService = { revenue, totalOverview };
+// driver management
+
+const postDriver = async (req) => {
+  const { body: payload, files, user } = req;
+
+  validateFields(files, [
+    "profile_image",
+    "id_or_passport_image",
+    "psv_license_image",
+    "driving_license_image",
+  ]);
+  validateFields(payload, [
+    "name",
+    "email",
+    "password",
+    "phoneNumber",
+    "address",
+    "idOrPassportNo",
+    "drivingLicenseNo",
+    "licenseType",
+    "licenseExpiry",
+  ]);
+
+  const authData = {
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    role: EnumUserRole.DRIVER,
+    isActive: true,
+  };
+
+  const auth = await Auth.create(authData);
+
+  const driverData = {
+    authId: auth._id,
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    phoneNumber: payload.phoneNumber,
+    address: payload.address,
+    idOrPassportNo: payload.idOrPassportNo,
+    drivingLicenseNo: payload.drivingLicenseNo,
+    licenseType: payload.licenseType,
+    licenseExpiry: payload.licenseExpiry,
+    profile_image: files.profile_image[0].path,
+    id_or_passport_image: files.id_or_passport_image[0].path,
+    psv_license_image: files.psv_license_image[0].path,
+    driving_license_image: files.driving_license_image[0].path,
+  };
+
+  const driver = await User.create(driverData);
+
+  EmailHelpers.sendAddDriverTemp(payload.email, {
+    password: payload.password,
+    ...driver.toObject(),
+  });
+
+  return driver;
+};
+
+const editDriver = async (req) => {
+  validateFields(req.body, ["authId", "userId"]);
+
+  const { body, files = {} } = req;
+  const { email, password, name, userId, authId, ...otherFields } = body || {};
+
+  if (email || password)
+    throw new ApiError(status.BAD_REQUEST, "Email & Password can't be changed");
+
+  const driver = await User.findOne({
+    _id: body.userId,
+    authId: body.authId,
+  });
+
+  if (!driver) throw new ApiError(status.BAD_REQUEST, "Driver not found.");
+
+  const updateData = { name, ...otherFields };
+
+  const fileFields = [
+    { key: "profile_image", oldPath: driver.profile_image },
+    { key: "id_or_passport_image", oldPath: driver.id_or_passport_image },
+    { key: "psv_license_image", oldPath: driver.psv_license_image },
+    { key: "driving_license_image", oldPath: driver.driving_license_image },
+  ];
+
+  for (const { key, oldPath } of fileFields) {
+    if (files[key]) {
+      updateData[key] = files[key][0].path;
+      unlinkFile(oldPath);
+    }
+  }
+
+  const [updatedDriver] = await Promise.all([
+    User.findByIdAndUpdate(userId, updateData, { new: true }).lean(),
+
+    Auth.findByIdAndUpdate(authId, { name }, { new: true }).lean(),
+  ]);
+
+  return updatedDriver;
+};
+
+const deleteDriver = async (userData, payload) => {
+  validateFields(payload, ["userId", "authId"]);
+
+  const deletedUser = await User.deleteOne({
+    _id: payload.userId,
+    employer: userData.userId,
+  });
+
+  if (!deletedUser.deletedCount)
+    throw new ApiError(status.NOT_FOUND, "Driver Not found");
+
+  const deletedAuth = await Auth.deleteOne({ _id: payload.authId });
+};
+
+const DashboardService = {
+  revenue,
+  totalOverview,
+  postDriver,
+  editDriver,
+  deleteDriver,
+};
 
 module.exports = DashboardService;
