@@ -32,6 +32,10 @@ const UserSchema = new Schema(
     address: {
       type: String,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
 
     // driver specific fields
     idOrPassportNo: {

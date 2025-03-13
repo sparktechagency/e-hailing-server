@@ -4,6 +4,7 @@ const otpResendTemp = require("../mail/otpResendTemp");
 const resetPassEmailTemp = require("../mail/resetPassEmailTemp");
 const signUpEmailTemp = require("../mail/signUpEmailTemp");
 const { sendEmail } = require("../util/sendEmail");
+const addDriverTemp = require("../mail/addDriverTemp");
 
 const sendActivationEmail = async (email, data) => {
   try {
@@ -44,10 +45,23 @@ const sendResetPasswordEmail = async (email, data) => {
   }
 };
 
+const sendAddDriverTemp = async (email, data) => {
+  try {
+    await sendEmail({
+      email,
+      subject: "Welcome To DuDu",
+      html: addDriverTemp(data),
+    });
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(status.INTERNAL_SERVER_ERROR, error.message);
+  }
+};
 const EmailHelpers = {
   sendActivationEmail,
   sendOtpResendEmail,
   sendResetPasswordEmail,
+  sendAddDriverTemp,
 };
 
 module.exports = EmailHelpers;
