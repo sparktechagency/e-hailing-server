@@ -71,9 +71,9 @@ const carSchema = new Schema(
       type: String,
       required: true,
     },
-    assignedTo: {
+    assignedDriver: {
       type: ObjectId,
-      ref: "Driver",
+      ref: "User",
     },
     isAssigned: {
       type: Boolean,

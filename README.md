@@ -1,3 +1,5 @@
+### questions
+
 ### missing in figma
 
 1. `seats`, `evpNumber`, `evpExpiry`, `carNumber` missing when adding a car in dashboard
@@ -13,7 +15,9 @@ booking flow:
     - User receives notification when driver accepts
 ```
 
-### questions
+### commented code (uncomment on production only)
+
+1. in `car.service`, in `updateAssignCarToDriver`, prevent a driver from being assigned to more than one car at a time
 
 ### collections
 

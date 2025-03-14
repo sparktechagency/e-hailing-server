@@ -42,6 +42,16 @@ const updateCar = catchAsync(async (req, res) => {
   });
 });
 
+const updateAssignCarToDriver = catchAsync(async (req, res) => {
+  const result = await CarService.updateAssignCarToDriver(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Car assigned",
+    data: result,
+  });
+});
+
 const deleteCar = catchAsync(async (req, res) => {
   const result = await CarService.deleteCar(req.user, req.body);
   sendResponse(res, {
@@ -57,6 +67,7 @@ const CarController = {
   getCar,
   getAllCars,
   updateCar,
+  updateAssignCarToDriver,
   deleteCar,
 };
 

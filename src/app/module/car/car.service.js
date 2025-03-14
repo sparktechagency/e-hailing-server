@@ -6,6 +6,8 @@ const validateFields = require("../../../util/validateFields");
 const postNotification = require("../../../util/postNotification");
 const unlinkFile = require("../../../util/unlinkFile");
 const processFileUpdates = require("../../../util/processFileUpdates");
+const User = require("../user/User");
+const { default: mongoose } = require("mongoose");
 
 const postCar = async (req) => {
   validateFields(req, ["files", "body"]);
@@ -62,9 +64,7 @@ const postCar = async (req) => {
 const getCar = async (userData, query) => {
   validateFields(query, ["carId"]);
 
-  const car = await Car.findOne({
-    _id: query.carId,
-  }).lean();
+  const car = await Car.findById(query.carId).lean();
 
   if (!car) throw new ApiError(status.NOT_FOUND, "Car not found");
 
@@ -79,7 +79,7 @@ const getAllCars = async (userData, query) => {
     .paginate()
     .fields();
 
-  const [car, meta] = await Promise.all([
+  const [cars, meta] = await Promise.all([
     carQuery.modelQuery,
     carQuery.countTotal(),
   ]);
@@ -124,16 +124,117 @@ const updateCar = async (req) => {
   return updatedCar;
 };
 
+// assign a car to a driver
+const updateAssignCarToDriver = async (userData, payload) => {
+  validateFields(payload, ["carId", "driverId"]);
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const [car, driver] = await Promise.all([
+      Car.findById(payload.carId).lean(),
+      User.findById(payload.driverId).lean(),
+    ]);
+
+    if (!car) throw new ApiError(status.NOT_FOUND, "Car not found");
+    if (!driver) throw new ApiError(status.NOT_FOUND, "Driver not found");
+
+    // if (driver.assignedCar)
+    //   throw new ApiError(status.BAD_REQUEST, "Driver already has a car");
+
+    const updatedCar = await Car.findByIdAndUpdate(
+      payload.carId,
+      { $set: { assignedDriver: payload.driverId } },
+      { new: true, session }
+    )
+      .select("assignedDriver")
+      .lean();
+
+    const updatedDriver = await User.findByIdAndUpdate(
+      payload.driverId,
+      { $set: { assignedCar: payload.carId } },
+      { new: true, session }
+    )
+      .select("assignedCar")
+      .lean();
+
+    await session.commitTransaction();
+
+    postNotification(
+      "Car assigned",
+      `A car has been assigned to a driver in DuDu. Car ID: ${payload.carId}`
+    );
+    postNotification(
+      "Car assigned",
+      `A car has been assigned to you.`,
+      car.assignedDriver
+    );
+
+    return { updatedCar, updatedDriver };
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+};
+
+// when deleting a car, unlink the images, remove the driver assignment and delete the car
 const deleteCar = async (userData, payload) => {
   validateFields(payload, ["carId"]);
 
-  const car = await Car.deleteOne({
-    _id: payload.carId,
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!car.deletedCount) throw new ApiError(status.NOT_FOUND, "Car not found");
+  try {
+    const car = await Car.findById(payload.carId).lean();
+    if (!car) throw new ApiError(status.NOT_FOUND, "Car not found");
 
-  return car;
+    // push all the images of the car in a array
+    const fileFields = [
+      { key: "car_image", oldPath: car.car_image }, // array of images
+      { key: "car_grant_image", oldPath: car.car_grant_image },
+      { key: "car_insurance_image", oldPath: car.car_insurance_image },
+      {
+        key: "e_hailing_car_permit_image",
+        oldPath: car.e_hailing_car_permit_image,
+      },
+    ];
+
+    // push every path inside fileFields into an array
+    const pathsToUnlink = fileFields
+      .flatMap(({ oldPath }) => (Array.isArray(oldPath) ? oldPath : [oldPath]))
+      .filter((path) => path); // filter out null values
+
+    if (car.assignedDriver) {
+      const updatedDriver = await User.findByIdAndUpdate(
+        car.assignedDriver,
+        { $unset: { assignedCar: null } },
+        { new: true, session }
+      );
+
+      if (!updatedDriver)
+        throw new ApiError(status.INTERNAL_SERVER_ERROR, "Error unlinking car");
+    }
+
+    const result = await Car.deleteOne({ _id: payload.carId }, { session });
+
+    if (!result.deletedCount)
+      throw new ApiError(status.NOT_FOUND, "Car not found");
+
+    await session.commitTransaction();
+
+    // only unlink the images after the transaction is committed
+    pathsToUnlink.forEach((path) => unlinkFile(path));
+
+    return result;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 };
 
 const CarService = {
@@ -142,6 +243,7 @@ const CarService = {
   getAllCars,
   updateCar,
   deleteCar,
+  updateAssignCarToDriver,
 };
 
 module.exports = CarService;
