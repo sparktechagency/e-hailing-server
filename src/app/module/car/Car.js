@@ -43,6 +43,14 @@ const carSchema = new Schema(
       type: String,
       required: true,
     },
+    insuranceStatus: {
+      type: String,
+      required: true,
+      enum: {
+        values: ["active", "inactive"],
+        message: "Invalid insurance status. Allowed values: active, inactive",
+      },
+    },
     registrationDate: {
       type: String,
       required: true,

@@ -30,6 +30,9 @@ const registrationAccount = async (payload) => {
   const { role, name, password, confirmPassword, email, emergencyPhoneNumber } =
     payload || {};
 
+  if (role === EnumUserRole.DRIVER)
+    throw new ApiError(status.BAD_REQUEST, "Invalid role");
+
   const { code: activationCode, expiredAt: activationCodeExpire } =
     codeGenerator(3);
   const authData = {

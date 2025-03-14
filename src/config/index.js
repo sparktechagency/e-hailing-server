@@ -20,7 +20,8 @@ const config = {
   base_url: process.env.BASE_URL,
   database_url: process.env.MONGO_URL,
   auth_level: {
-    user: ["USER", "ADMIN", "SUPER_ADMIN"],
+    user: ["USER", "DRIVER", "ADMIN", "SUPER_ADMIN"],
+    driver: ["DRIVER", "ADMIN", "SUPER_ADMIN"],
     admin: ["ADMIN", "SUPER_ADMIN"],
     super_admin: ["SUPER_ADMIN"],
   },
