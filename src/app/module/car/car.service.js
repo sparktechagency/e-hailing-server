@@ -29,6 +29,7 @@ const postCar = async (req) => {
     "color",
     "carLicensePlate",
     "vin",
+    "insuranceStatus",
     "registrationDate",
   ]);
 
@@ -43,6 +44,7 @@ const postCar = async (req) => {
     color: payload.color,
     carLicensePlate: payload.carLicensePlate,
     vin: payload.vin,
+    insuranceStatus: payload.insuranceStatus,
     registrationDate: payload.registrationDate,
     car_image: files.car_image.map((file) => file.path),
     car_grant_image: files.car_grant_image[0].path,
