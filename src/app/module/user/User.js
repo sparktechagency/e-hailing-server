@@ -59,7 +59,7 @@ const UserSchema = new Schema(
     driving_license_image: {
       type: String,
     },
-    assignedTo: {
+    assignedCar: {
       type: ObjectId,
       ref: "Car",
     },

@@ -21,6 +21,16 @@ router
     auth(config.auth_level.user),
     CarController.updateCar
   )
-  .delete("/delete-car", auth(config.auth_level.user), CarController.deleteCar);
+  .patch(
+    "/update-assign-car-to-driver",
+    auth(config.auth_level.admin),
+    CarController.updateAssignCarToDriver
+  )
+
+  .delete(
+    "/delete-car",
+    auth(config.auth_level.admin),
+    CarController.deleteCar
+  );
 
 module.exports = router;
