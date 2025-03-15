@@ -6,6 +6,7 @@ const EmailHelpers = require("../../../util/emailHelpers");
 const validateFields = require("../../../util/validateFields");
 const ApiError = require("../../../error/ApiError");
 const unlinkFile = require("../../../util/unlinkFile");
+const QueryBuilder = require("../../../builder/queryBuilder");
 
 // overview ========================
 const revenue = async (query) => {
@@ -169,6 +170,17 @@ const postDriver = async (req) => {
   return driver;
 };
 
+const getDriver = async (query) => {
+  validateFields(query, ["driverId"]);
+
+  const driver = await User.findById(query.driverId)
+    .populate("assignedCar")
+    .lean();
+  if (!driver) throw new ApiError(status.NOT_FOUND, "Driver not found");
+
+  return driver;
+};
+
 const editDriver = async (req) => {
   validateFields(req.body, ["authId", "userId"]);
 
@@ -210,12 +222,11 @@ const editDriver = async (req) => {
   return updatedDriver;
 };
 
-// car management
-
 const DashboardService = {
   revenue,
   totalOverview,
   postDriver,
+  getDriver,
   editDriver,
 };
 
