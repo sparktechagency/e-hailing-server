@@ -148,6 +148,7 @@ const postDriver = async (req) => {
     name: payload.name,
     email: payload.email,
     password: payload.password,
+    role: EnumUserRole.DRIVER,
     phoneNumber: payload.phoneNumber,
     address: payload.address,
     idOrPassportNo: payload.idOrPassportNo,

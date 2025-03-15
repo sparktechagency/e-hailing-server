@@ -88,6 +88,7 @@ const registrationAccount = async (payload) => {
     authId: auth._id,
     name,
     email,
+    role,
     ...(emergencyPhoneNumber && { emergencyPhoneNumber }),
   };
 
@@ -247,6 +248,7 @@ const socialLogin = async (payload) => {
       authId: auth._id,
       name,
       email,
+      role,
       ...(profile_image && { profile_image }),
       ...(address && { address }),
     };
