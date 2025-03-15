@@ -20,6 +20,11 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      enum: ["USER", "DRIVER"],
+      required: true,
+    },
     profile_image: {
       type: String,
     },

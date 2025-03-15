@@ -1,12 +1,10 @@
 ### questions
 
-### missing in figma
+### modifications in figma
 
 1. `seats`, `evpNumber`, `evpExpiry`, `carNumber` missing when adding a car in dashboard
-2. no need for driver id in the app
-3. in a booking request, when a user selects a car, adds details and confirms for booking. Do not show the user instantly the driver's data and his request has been accepted. Instead, show the user that his request has been sent to the driver and he will be notified when the driver accepts the request.
-
-booking flow:
+2. in a booking request, when a user selects a car, adds details and confirms for booking. Do not show the user instantly the driver's data and his request has been accepted. Instead, show the user that his request has been sent to the driver and he will be notified when the driver accepts the request.
+   booking flow:
 
 ```
     - User selects car and adds booking details
@@ -14,6 +12,8 @@ booking flow:
     - Show "Request sent to driver" message
     - User receives notification when driver accepts
 ```
+
+3. dashboard | in `driver` section -> statics -> add `total`. Check if it can be done for the driver section in app
 
 ### commented code (uncomment on production only)
 
