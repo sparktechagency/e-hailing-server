@@ -14,6 +14,7 @@
 ```
 
 3. dashboard | in `driver` section -> statics -> add `total`. Check if it can be done for the driver section in app
+4. dashboard | in `D coin` section -> change this to 1 dCoin = 10 MYR.
 
 ### commented code (uncomment on production only)
 
