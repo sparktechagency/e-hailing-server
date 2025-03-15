@@ -32,5 +32,5 @@
 9. notifications
 10. messages
 11. conversations
-12. coins
+12. dCoins
 13. payments

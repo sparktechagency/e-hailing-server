@@ -34,6 +34,26 @@ const postDriver = catchAsync(async (req, res) => {
   });
 });
 
+const getDriver = catchAsync(async (req, res) => {
+  const result = await DashboardService.getDriver(req.user);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Driver retrieved successfully",
+    data: result,
+  });
+});
+
+const getAllDriversOrUsers = catchAsync(async (req, res) => {
+  const result = await DashboardService.getAllDriversOrUsers(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `${req.query.role} retrieved successfully`,
+    data: result,
+  });
+});
+
 const editDriver = catchAsync(async (req, res) => {
   const result = await DashboardService.editDriver(req);
   sendResponse(res, {
@@ -48,6 +68,8 @@ const DashboardController = {
   totalOverview,
   revenue,
   postDriver,
+  getDriver,
+  getAllDriversOrUsers,
   editDriver,
 };
 
