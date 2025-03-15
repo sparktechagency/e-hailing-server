@@ -1,5 +1,8 @@
 ### questions
 
+1. price per km.
+2. pricer per seat.
+
 ### modifications in figma
 
 1. `seats`, `evpNumber`, `evpExpiry`, `carNumber` missing when adding a car in dashboard
