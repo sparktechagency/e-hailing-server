@@ -23,6 +23,16 @@ router
     uploadFile(),
     DashboardController.postDriver
   )
+  .get(
+    "/get-driver",
+    auth(config.auth_level.admin),
+    DashboardController.getDriver
+  )
+  .get(
+    "/get-all-drivers-or-users",
+    auth(config.auth_level.admin),
+    DashboardController.getAllDriversOrUsers
+  )
   .patch(
     "/edit-driver",
     auth(config.auth_level.admin),

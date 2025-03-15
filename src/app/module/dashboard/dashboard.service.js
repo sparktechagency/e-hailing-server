@@ -182,6 +182,33 @@ const getDriver = async (query) => {
   return driver;
 };
 
+const getAllDriversOrUsers = async (query) => {
+  validateFields(query, ["role"]);
+
+  if (!Object.values(EnumUserRole).includes(query.role))
+    throw new ApiError(status.BAD_REQUEST, "Invalid role");
+
+  const driversQuery = new QueryBuilder(
+    User.find({ role: query.role }).lean(),
+    query
+  )
+    .search(["name", "email", "phoneNumber"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [result, meta] = await Promise.all([
+    driversQuery.modelQuery,
+    driversQuery.countTotal(),
+  ]);
+
+  return {
+    meta,
+    result,
+  };
+};
+
 const editDriver = async (req) => {
   validateFields(req.body, ["authId", "userId"]);
 
@@ -228,6 +255,7 @@ const DashboardService = {
   totalOverview,
   postDriver,
   getDriver,
+  getAllDriversOrUsers,
   editDriver,
 };
 
