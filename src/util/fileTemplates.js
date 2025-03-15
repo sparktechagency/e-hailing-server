@@ -81,7 +81,7 @@ const controllerTemplate = (moduleName) => {
     });
 
     const ${moduleName}Controller = {
-    create${moduleName},
+    post${moduleName},
     get${moduleName},
     getAll${moduleName}s,
     update${moduleName},

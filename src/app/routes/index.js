@@ -10,6 +10,7 @@ const FeedbackRoutes = require("../module/feedback/feedback.routes");
 const ReviewRoutes = require("../module/review/review.routes");
 const CarRoutes = require("../module/car/car.routes");
 const DCoinRoutes = require("../module/dcoin/dcoin.routes");
+const TripRoutes = require("../module/trip/trip.routes");
 
 const moduleRoutes = [
   {
@@ -51,6 +52,10 @@ const moduleRoutes = [
   {
     path: "/dcoin",
     route: DCoinRoutes,
+  },
+  {
+    path: "/trip",
+    route: TripRoutes,
   },
 ];
 
