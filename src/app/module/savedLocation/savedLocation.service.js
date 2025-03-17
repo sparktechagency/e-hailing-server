@@ -5,7 +5,29 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 
 const postSavedLocation = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, [
+    "locationName",
+    "locationAddress",
+    "longitude",
+    "latitude",
+  ]);
+
+  const lat = Number(payload.latitude);
+  const long = Number(payload.longitude);
+
+  const savedLocationData = {
+    user: userData.userId,
+    locationName: payload.locationName,
+    locationAddress: payload.locationAddress,
+    location: {
+      type: "Point",
+      coordinates: [long, lat],
+    },
+  };
+
+  const savedLocation = await SavedLocation.create(savedLocationData);
+
+  return savedLocation;
 };
 
 const getSavedLocation = async (userData, query) => {
@@ -21,9 +43,9 @@ const getSavedLocation = async (userData, query) => {
   return savedLocation;
 };
 
-const getAllSavedLocations = async (userData, query) => {
+const getMySavedLocations = async (userData, query) => {
   const savedLocationQuery = new QueryBuilder(
-    SavedLocation.find({}).lean(),
+    SavedLocation.find({ user: userData.userId }).lean(),
     query
   )
     .search([])
@@ -59,7 +81,7 @@ const deleteSavedLocation = async (userData, payload) => {
 const SavedLocationService = {
   postSavedLocation,
   getSavedLocation,
-  getAllSavedLocations,
+  getMySavedLocations,
   deleteSavedLocation,
 };
 
