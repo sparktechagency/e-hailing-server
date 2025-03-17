@@ -25,6 +25,17 @@ const LoginProvider = {
   APPLE: "apple",
 };
 
+const TripStatus = {
+  REQUESTED: "requested",
+  ACCEPTED: "accepted",
+  ON_THE_WAY: "on_the_way",
+  ARRIVED: "arrived",
+  PICKED_UP: "picked_up",
+  STARTED: "started",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+};
+
 const UserAccountStatus = {
   VERIFIED: "verified",
   UNVERIFIED: "unverified",
@@ -35,5 +46,6 @@ module.exports = {
   EnumPaymentType,
   EnumSocketEvent,
   LoginProvider,
+  TripStatus,
   UserAccountStatus,
 };
