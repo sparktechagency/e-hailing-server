@@ -41,6 +41,17 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    locationCoordinates: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
 
     // driver specific fields
     idOrPassportNo: {
