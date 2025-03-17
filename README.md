@@ -1,7 +1,7 @@
 ### questions
 
 1. price per km.
-2. pricer per seat.
+2. pricer per seat. 5 seats
 
 ### modifications in figma
 

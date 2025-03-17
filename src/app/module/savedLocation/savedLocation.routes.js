@@ -17,14 +17,9 @@ router
     SavedLocationController.getSavedLocation
   )
   .get(
-    "/get-all-saved-location",
+    "/get-my-saved-location",
     auth(config.auth_level.user),
-    SavedLocationController.getAllSavedLocations
-  )
-  .patch(
-    "/update-saved-location",
-    auth(config.auth_level.user),
-    SavedLocationController.updateSavedLocation
+    SavedLocationController.getMySavedLocations
   )
   .delete(
     "/delete-saved-location",

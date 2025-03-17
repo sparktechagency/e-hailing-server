@@ -28,8 +28,8 @@ const getSavedLocation = catchAsync(async (req, res) => {
   });
 });
 
-const getAllSavedLocations = catchAsync(async (req, res) => {
-  const result = await SavedLocationService.getAllSavedLocations(
+const getMySavedLocations = catchAsync(async (req, res) => {
+  const result = await SavedLocationService.getMySavedLocations(
     req.user,
     req.query
   );
@@ -37,19 +37,6 @@ const getAllSavedLocations = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: "SavedLocations retrieved",
-    data: result,
-  });
-});
-
-const updateSavedLocation = catchAsync(async (req, res) => {
-  const result = await SavedLocationService.updateSavedLocation(
-    req.user,
-    req.body
-  );
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "SavedLocation updated",
     data: result,
   });
 });
@@ -70,8 +57,7 @@ const deleteSavedLocation = catchAsync(async (req, res) => {
 const SavedLocationController = {
   postSavedLocation,
   getSavedLocation,
-  getAllSavedLocations,
-  updateSavedLocation,
+  getMySavedLocations,
   deleteSavedLocation,
 };
 

@@ -59,7 +59,7 @@ const moduleRoutes = [
     route: TripRoutes,
   },
   {
-    path: "/savedLocation",
+    path: "/saved-location",
     route: SavedLocationRoutes,
   },
 ];
