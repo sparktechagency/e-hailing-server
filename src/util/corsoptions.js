@@ -1,5 +1,5 @@
 const corsOptions = {
-  origin: [],
+  origin: "*",
   credentials: true,
 };
 

@@ -15,6 +15,7 @@ const EnumSocketEvent = {
   CONNECTION: "connection",
   DISCONNECT: "disconnect",
   ERROR: "error",
+  REQUEST_TRIP: "request_trip",
   START_CHAT: "start_chat",
   SEND_MESSAGE: "send_message",
 };
