@@ -2,6 +2,8 @@ const { default: status } = require("http-status");
 const User = require("../app/module/user/User");
 const emitError = require("./emitError");
 const socketCatchAsync = require("../util/socketCatchAsync");
+const validateSocketFields = require("../util/socketValidateFields");
+const fareCalculator = require("../util/fareCalculator");
 
 const validateUser = socketCatchAsync(async (socket, io, payload) => {
   if (!payload.userId) {
@@ -23,8 +25,39 @@ const validateUser = socketCatchAsync(async (socket, io, payload) => {
   return user;
 });
 
-const Controller = {
+const requestTrip = socketCatchAsync(async (socket, io, payload) => {
+  validateSocketFields(socket, payload, [
+    "pickUpAddress",
+    "pickUpLat",
+    "pickUpLong",
+    "dropOffAddress",
+    "dropOffLat",
+    "dropOffLong",
+    "duration",
+    "distance",
+  ]);
+
+  const tripData = {
+    user: payload.userId,
+    pickUpAddress: payload.pickUpAddress,
+    pickUpCoordinates: {
+      coordinates: [Number(payload.pickUpLong), Number(payload.pickUpLat)],
+    },
+    dropOffAddress: payload.dropOffAddress,
+    dropOffCoordinates: {
+      coordinates: [Number(payload.dropOffLong), Number(payload.dropOffLat)],
+    },
+    duration: Math.ceil(Number(payload.duration)),
+    distance: Math.ceil(Number(payload.distance)) / 1000,
+    estimatedFare: fareCalculator(payload.duration, payload.distance),
+  };
+
+  console.log(tripData.estimatedFare);
+});
+
+const SocketController = {
   validateUser,
+  requestTrip,
 };
 
-module.exports = Controller;
+module.exports = SocketController;
