@@ -14,7 +14,7 @@ const EnumPaymentType = {
 const EnumSocketEvent = {
   CONNECTION: "connection",
   DISCONNECT: "disconnect",
-  ERROR: "error",
+  SOCKET_ERROR: "socket_error",
   REQUEST_TRIP: "request_trip",
   START_CHAT: "start_chat",
   SEND_MESSAGE: "send_message",

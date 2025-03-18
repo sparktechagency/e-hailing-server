@@ -1,4 +1,5 @@
 const { EnumSocketEvent } = require("../util/enum");
+const SocketController = require("./socket.controller");
 const Controller = require("./socket.controller");
 
 const socketHandlers = async (socket, io) => {
@@ -12,6 +13,10 @@ const socketHandlers = async (socket, io) => {
   socket.join(userId);
 
   console.log("a user connected", userId);
+
+  socket.on(EnumSocketEvent.REQUEST_TRIP, (payload) => {
+    SocketController.requestTrip(socket, io, { ...payload, userId });
+  });
 
   socket.on(EnumSocketEvent.DISCONNECT, () => {
     console.log("user disconnected", userId);

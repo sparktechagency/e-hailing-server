@@ -7,7 +7,8 @@ const emitError = (
   message = "Internal sever error",
   disconnect
 ) => {
-  socket.emit(EnumSocketEvent.ERROR, { status: statusCode, message });
+  socket.emit(EnumSocketEvent.SOCKET_ERROR, { status: statusCode, message });
+  console.log("disconnect---------", disconnect);
 
   if (disconnect) socket.disconnect(true);
 };
