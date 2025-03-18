@@ -64,7 +64,14 @@ const postCar = async (req) => {
 const getCar = async (userData, query) => {
   validateFields(query, ["carId"]);
 
-  const car = await Car.findById(query.carId).lean();
+  const car = await Car.findById(query.carId)
+    .populate([
+      {
+        path: "assignedDriver",
+        select: "-createdAt -updatedAt -__v",
+      },
+    ])
+    .lean();
 
   if (!car) throw new ApiError(status.NOT_FOUND, "Car not found");
 
@@ -72,7 +79,17 @@ const getCar = async (userData, query) => {
 };
 
 const getAllCars = async (userData, query) => {
-  const carQuery = new QueryBuilder(Car.find({}).lean(), query)
+  const carQuery = new QueryBuilder(
+    Car.find({})
+      .populate([
+        {
+          path: "assignedDriver",
+          select: "-createdAt -updatedAt -__v",
+        },
+      ])
+      .lean(),
+    query
+  )
     .search([])
     .filter()
     .sort()
@@ -145,7 +162,12 @@ const updateAssignCarToDriver = async (userData, payload) => {
 
     const updatedCar = await Car.findByIdAndUpdate(
       payload.carId,
-      { $set: { assignedDriver: payload.driverId } },
+      {
+        $set: {
+          assignedDriver: payload.driverId,
+          isAssigned: true,
+        },
+      },
       { new: true, session }
     )
       .select("assignedDriver")

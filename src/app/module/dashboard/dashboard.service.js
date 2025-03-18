@@ -1,5 +1,5 @@
 const { default: status } = require("http-status");
-const { EnumUserRole } = require("../../../util/enum");
+const { EnumUserRole, UserAccountStatus } = require("../../../util/enum");
 const Auth = require("../auth/Auth");
 const User = require("../user/User");
 const EmailHelpers = require("../../../util/emailHelpers");
@@ -159,6 +159,7 @@ const postDriver = async (req) => {
     id_or_passport_image: files.id_or_passport_image[0].path,
     psv_license_image: files.psv_license_image[0].path,
     driving_license_image: files.driving_license_image[0].path,
+    userAccountStatus: UserAccountStatus.VERIFIED,
   };
 
   const driver = await User.create(driverData);
