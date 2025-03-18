@@ -13,7 +13,7 @@ const io = new Server(mainServer, {
 });
 
 io.on(EnumSocketEvent.CONNECTION, (socket) => {
-  socketHandlers(socket);
+  socketHandlers(socket, io);
 });
 
 module.exports = mainServer;
