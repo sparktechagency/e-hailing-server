@@ -19,12 +19,28 @@ const validateUser = socketCatchAsync(async (socket, io, payload) => {
   }
 
   const user = await User.findById(payload.userId);
+  console.log(payload.userId);
   if (!user) {
     emitError(socket, status.NOT_FOUND, "User not found", "disconnect");
     return null;
   }
 
   return user;
+});
+
+const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    payload.userId,
+    { isOnline: payload.isOnline },
+    { new: true }
+  );
+
+  socket.emit(EnumSocketEvent.ONLINE_STATUS, {
+    message: `You are ${updatedUser.isOnline}`,
+    isOnline: updatedUser.isOnline,
+  });
+
+  console.log(updatedUser.isOnline);
 });
 
 const requestTrip = socketCatchAsync(async (socket, io, payload) => {
@@ -62,6 +78,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
 
 const SocketController = {
   validateUser,
+  updateOnlineStatus,
   requestTrip,
 };
 
