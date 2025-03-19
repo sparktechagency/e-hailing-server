@@ -12,12 +12,10 @@ const tripSchema = new Schema(
     driver: {
       type: ObjectId,
       ref: "User",
-      required: true,
     },
     car: {
       type: ObjectId,
       ref: "Car",
-      required: true,
     },
     pickUpAddress: {
       type: String,

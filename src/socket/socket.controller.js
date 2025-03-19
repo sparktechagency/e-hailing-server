@@ -4,6 +4,8 @@ const emitError = require("./emitError");
 const socketCatchAsync = require("../util/socketCatchAsync");
 const validateSocketFields = require("../util/socketValidateFields");
 const fareCalculator = require("../util/fareCalculator");
+const Trip = require("../app/module/trip/Trip");
+const { EnumSocketEvent } = require("../util/enum");
 
 const validateUser = socketCatchAsync(async (socket, io, payload) => {
   if (!payload.userId) {
@@ -52,7 +54,10 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
     estimatedFare: fareCalculator(payload.duration, payload.distance),
   };
 
-  console.log(tripData.estimatedFare);
+  const trip = await Trip.create(tripData);
+
+  // send trip data to every driver
+  socket.emit(EnumSocketEvent.REQUEST_TRIP, trip);
 });
 
 const SocketController = {
