@@ -54,6 +54,9 @@ const UserSchema = new Schema(
     },
 
     // driver specific fields
+    isAvailable: {
+      type: Boolean,
+    },
     idOrPassportNo: {
       type: String,
     },

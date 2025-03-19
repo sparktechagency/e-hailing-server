@@ -151,6 +151,7 @@ const postDriver = async (req) => {
     role: EnumUserRole.DRIVER,
     phoneNumber: payload.phoneNumber,
     address: payload.address,
+    isAvailable: true,
     idOrPassportNo: payload.idOrPassportNo,
     drivingLicenseNo: payload.drivingLicenseNo,
     licenseType: payload.licenseType,
