@@ -12,8 +12,10 @@ const io = new Server(mainServer, {
   cors: socketCors,
 });
 
+const activeDrivers = new Map();
+
 io.on(EnumSocketEvent.CONNECTION, (socket) => {
-  socketHandlers(socket, io);
+  socketHandlers(socket, io, activeDrivers);
 });
 
 module.exports = mainServer;

@@ -1,7 +1,8 @@
-const { EnumSocketEvent } = require("../util/enum");
+const { EnumSocketEvent, EnumUserRole } = require("../util/enum");
+const socketCatchAsync = require("../util/socketCatchAsync");
 const SocketController = require("./socket.controller");
 
-const socketHandlers = async (socket, io) => {
+const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
   console.log("Trying to connect");
 
   const userId = socket.handshake.query.userId;
@@ -18,8 +19,25 @@ const socketHandlers = async (socket, io) => {
     isOnline: true,
   });
 
-  socket.on(EnumSocketEvent.REQUEST_TRIP, (payload) => {
-    SocketController.requestTrip(socket, io, { ...payload, userId });
+  if (user.role === EnumUserRole.DRIVER) {
+    activeDrivers.set(userId, socket);
+  }
+
+  console.log("connected activeDrivers:", activeDrivers.size);
+
+  socket.on(EnumSocketEvent.TRIP_REQUESTED, (payload) => {
+    SocketController.requestTrip(socket, io, {
+      ...payload,
+      userId,
+      activeDrivers,
+    });
+  });
+
+  socket.on(EnumSocketEvent.TRIP_ACCEPTED, (payload) => {
+    SocketController.acceptTrip(socket, io, {
+      ...payload,
+      userId,
+    });
   });
 
   socket.on(EnumSocketEvent.DISCONNECT, () => {
@@ -27,8 +45,10 @@ const socketHandlers = async (socket, io) => {
       userId,
       isOnline: false,
     });
+    activeDrivers.delete(userId);
+    console.log("disconnected activeDrivers:", activeDrivers.size);
     console.log(userId, "disconnected");
   });
-};
+});
 
 module.exports = socketHandlers;
