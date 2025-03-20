@@ -19,6 +19,7 @@ const registrationAccount = async (payload) => {
     "password",
     "confirmPassword",
     "email",
+    "phoneNumber",
     "role",
     "name",
     "provider",
@@ -27,8 +28,15 @@ const registrationAccount = async (payload) => {
   if (payload.provider !== LoginProvider.LOCAL)
     throw new ApiError(status.BAD_REQUEST, "Invalid provider");
 
-  const { role, name, password, confirmPassword, email, emergencyPhoneNumber } =
-    payload || {};
+  const {
+    role,
+    name,
+    password,
+    confirmPassword,
+    email,
+    phoneNumber,
+    emergencyPhoneNumber,
+  } = payload || {};
 
   if (role === EnumUserRole.DRIVER)
     throw new ApiError(status.BAD_REQUEST, "Invalid role");
@@ -89,6 +97,7 @@ const registrationAccount = async (payload) => {
     name,
     email,
     role,
+    phoneNumber,
     ...(emergencyPhoneNumber && { emergencyPhoneNumber }),
   };
 

@@ -30,6 +30,7 @@ const UserSchema = new Schema(
     },
     phoneNumber: {
       type: String,
+      required: true,
     },
     dateOfBirth: {
       type: String,
