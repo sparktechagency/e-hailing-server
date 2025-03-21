@@ -18,6 +18,8 @@
 
 3. dashboard | in `driver` section -> statics -> add `total`. Check if it can be done for the driver section in app
 4. dashboard | in `D coin` section -> change this to 1 dCoin = 10 MYR.
+5. app | toll adding screen missing
+6. app | show route button. clicking on that button will take driver to google navigation
 
 ### commented code (uncomment on production only)
 

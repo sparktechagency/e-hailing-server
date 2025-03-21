@@ -235,15 +235,15 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         })
       );
 
-      // socket.emit(
-      //   EnumSocketEvent.TRIP_ACCEPTED,
-      //   emitResult({
-      //     statusCode: status.OK,
-      //     success: true,
-      //     message: `${result.driver.name} has accepted your trip`,
-      //     data: result,
-      //   })
-      // );
+      socket.emit(
+        EnumSocketEvent.TRIP_ACCEPTED,
+        emitResult({
+          statusCode: status.OK,
+          success: true,
+          message: `${result.driver.name} has accepted your trip`,
+          data: result,
+        })
+      );
 
       postNotification(
         "Trip Accepted",
