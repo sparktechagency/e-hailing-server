@@ -320,12 +320,148 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
   );
 });
 
+const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
+  const { tripId, newStatus, duration, distance } = payload || {};
+
+  validateSocketFields(socket, payload, ["tripId", "newStatus"]);
+
+  const allowedNewStatus = [
+    TripStatus.ON_THE_WAY,
+    TripStatus.ARRIVED,
+    TripStatus.PICKED_UP,
+    TripStatus.STARTED,
+    TripStatus.COMPLETED,
+    TripStatus.CANCELLED,
+  ];
+
+  const user = await User.findById(payload.userId).select("role");
+
+  if (user.role === EnumUserRole.USER && newStatus !== TripStatus.CANCELLED)
+    emitError(
+      socket,
+      status.FORBIDDEN,
+      `Only driver can update trip status to ${newStatus}`
+    );
+
+  if (!allowedNewStatus.includes(newStatus))
+    emitError(socket, status.BAD_REQUEST, "Invalid status");
+
+  if (newStatus === TripStatus.COMPLETED)
+    validateSocketFields(socket, payload, ["duration", "distance"]);
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const updateData = {
+        status: newStatus,
+        ...(newStatus === TripStatus.STARTED && { tripStartedAt: Date.now() }),
+        ...(newStatus === TripStatus.COMPLETED && {
+          duration,
+          distance,
+          tripCompletedAt: Date.now(),
+          finalFare: fareCalculator(duration, distance),
+        }),
+      };
+      console.log("updateData=========", updateData);
+      // return;
+
+      const updatedTrip = await Trip.findByIdAndUpdate(tripId, updateData, {
+        new: true,
+        runValidators: true,
+        session,
+      });
+      console.log(updatedTrip.status);
+      // Notify relevant parties
+      if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
+
+      handleStatusNotifications(io, updatedTrip, newStatus);
+
+      // Handle driver availability changes
+      if (newStatus === TripStatus.COMPLETED) {
+        await User.findByIdAndUpdate(
+          updatedTrip.driver._id,
+          {
+            isAvailable: true,
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
+        );
+        activeDrivers.set(updatedTrip.driver._id, socket);
+      }
+    });
+  } finally {
+    session.endSession();
+  }
+});
+
+const handleStatusNotifications = (io, trip, newStatus) => {
+  const eventName = `trip_${newStatus}`;
+  const messageMap = {
+    [TripStatus.ON_THE_WAY]: {
+      rider: "Your driver is on the way",
+      driver: "You are on the way to the rider",
+    },
+    [TripStatus.ARRIVED]: {
+      rider: "Your driver has arrived",
+      driver: "You have arrived at the pickup location",
+    },
+    [TripStatus.PICKED_UP]: {
+      rider: "You've been picked up",
+      driver: "You have picked up the rider",
+    },
+    [TripStatus.STARTED]: {
+      rider: "Your trip has started",
+      driver: "The trip has started",
+    },
+    [TripStatus.COMPLETED]: {
+      rider: "Your trip has been completed successfully",
+      driver: "You have successfully completed the trip",
+    },
+    [TripStatus.CANCELLED]: {
+      rider: "Your trip has been cancelled",
+      driver: "The trip has been cancelled",
+    },
+  };
+  console.log(trip.driver);
+  console.log(trip.user);
+  // Notify user
+  io.to(trip.user.toString()).emit(
+    eventName,
+    emitResult({
+      statusCode: status.OK,
+      success: true,
+      message: messageMap[newStatus].user,
+      data: trip,
+    })
+  );
+
+  postNotification(`Trip update`, messageMap[newStatus].rider, trip.user);
+
+  // Notify driver
+  io.to(trip.driver.toString()).emit(
+    eventName,
+    emitResult({
+      statusCode: status.OK,
+      success: true,
+      message: messageMap[newStatus].driver,
+      data: trip,
+    })
+  );
+
+  if (trip.driver)
+    postNotification(`Trip update`, messageMap[newStatus].driver, trip.driver);
+};
+
 const SocketController = {
   validateUser,
   updateOnlineStatus,
   requestTrip,
   acceptTrip,
   updateDriverLocation,
+  updateTripStatus,
 };
 
 module.exports = SocketController;
