@@ -42,6 +42,8 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+
+    // driver specific fields
     locationCoordinates: {
       type: {
         type: String,
@@ -53,8 +55,6 @@ const UserSchema = new Schema(
         required: true,
       },
     },
-
-    // driver specific fields
     isAvailable: {
       type: Boolean,
     },

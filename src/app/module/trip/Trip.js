@@ -47,6 +47,17 @@ const tripSchema = new Schema(
         required: true,
       },
     },
+    driverCoordinates: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
     duration: {
       type: Number,
       required: true,
@@ -100,6 +111,7 @@ const tripSchema = new Schema(
 
 tripSchema.index({ pickUpCoordinates: "2dsphere" });
 tripSchema.index({ dropOffCoordinates: "2dsphere" });
+tripSchema.index({ driverCoordinates: "2dsphere" });
 
 const Trip = model("Trip", tripSchema);
 

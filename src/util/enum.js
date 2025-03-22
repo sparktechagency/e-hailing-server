@@ -16,10 +16,13 @@ const EnumSocketEvent = {
   DISCONNECT: "disconnect",
   SOCKET_ERROR: "socket_error",
   ONLINE_STATUS: "online_status",
+
   TRIP_REQUESTED: "trip_requested",
   TRIP_AVAILABLE: "trip_available",
   TRIP_NO_DRIVER_FOUND: "trip_no_driver_found",
   TRIP_ACCEPTED: "trip_accepted",
+  TRIP_DRIVER_LOCATION_UPDATE: "trip_driver_location_update",
+
   START_CHAT: "start_chat",
   SEND_MESSAGE: "send_message",
 };

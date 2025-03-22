@@ -13,12 +13,7 @@ const socketCatchAsync = (fn) => {
       if (payload && payload.uploadedFiles)
         deleteUploadedFiles(payload.uploadedFiles);
 
-      emitError(
-        socket,
-        status.INTERNAL_SERVER_ERROR,
-        error.message,
-        "disconnect"
-      );
+      emitError(socket, status.INTERNAL_SERVER_ERROR, error.message);
     }
   };
 };
