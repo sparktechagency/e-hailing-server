@@ -34,14 +34,15 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
   });
 
   socket.on(EnumSocketEvent.TRIP_ACCEPTED, (payload) => {
-    SocketController.acceptTrip(socket, io, {
-      ...payload,
-      userId,
-    });
+    SocketController.acceptTrip(socket, io, { ...payload, userId });
   });
 
   socket.on(EnumSocketEvent.TRIP_DRIVER_LOCATION_UPDATE, (payload) => {
     SocketController.updateDriverLocation(socket, io, { ...payload });
+  });
+
+  socket.on(EnumSocketEvent.TRIP_UPDATE_STATUS, (payload) => {
+    SocketController.updateTripStatus(socket, io, { ...payload, userId });
   });
 
   socket.on(EnumSocketEvent.DISCONNECT, () => {

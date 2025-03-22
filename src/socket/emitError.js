@@ -10,10 +10,11 @@ const emitError = (
   socket.emit(EnumSocketEvent.SOCKET_ERROR, { status: statusCode, message });
 
   if (disconnect) {
-    console.log("disconnect-----------------", disconnect);
     socket.disconnect(true);
     console.log("disconnected because of error");
   }
+
+  throw new Error(message);
 };
 
 module.exports = emitError;

@@ -12,8 +12,6 @@ const socketCatchAsync = (fn) => {
       // cleanup any uploaded files in case of error
       if (payload && payload.uploadedFiles)
         deleteUploadedFiles(payload.uploadedFiles);
-
-      emitError(socket, status.INTERNAL_SERVER_ERROR, error.message);
     }
   };
 };
