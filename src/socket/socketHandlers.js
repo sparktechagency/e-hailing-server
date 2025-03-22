@@ -40,6 +40,10 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
     });
   });
 
+  socket.on(EnumSocketEvent.TRIP_DRIVER_LOCATION_UPDATE, (payload) => {
+    SocketController.updateDriverLocation(socket, io, { ...payload });
+  });
+
   socket.on(EnumSocketEvent.DISCONNECT, () => {
     SocketController.updateOnlineStatus(socket, io, {
       userId,

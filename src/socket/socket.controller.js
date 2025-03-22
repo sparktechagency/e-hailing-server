@@ -240,7 +240,7 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         emitResult({
           statusCode: status.OK,
           success: true,
-          message: `${result.driver.name} has accepted your trip`,
+          message: `You have accepted a trip from ${result.user.name}`,
           data: result,
         })
       );
@@ -263,11 +263,69 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
   }
 });
 
+const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
+  validateSocketFields(socket, payload, ["tripId", "lat", "long"]);
+
+  const { tripId, lat, long } = payload;
+
+  const updatedTrip = await Trip.findByIdAndUpdate(
+    tripId,
+    {
+      driverCoordinates: {
+        coordinates: [Number(long), Number(lat)],
+      },
+    },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedTrip) {
+    emitError(socket, status.NOT_FOUND, "Trip not found");
+    return null;
+  }
+  if (!updatedTrip.driver) {
+    emitError(socket, status.NOT_FOUND, "This trip has no driver");
+    return null;
+  }
+
+  await User.findByIdAndUpdate(
+    updatedTrip.driver,
+    {
+      locationCoordinates: {
+        coordinates: [Number(long), Number(lat)],
+      },
+    },
+    { new: true, runValidators: true }
+  );
+
+  // Broadcast to user (consider throttling in production)
+  io.to(updatedTrip.user.toString()).emit(
+    EnumSocketEvent.TRIP_DRIVER_LOCATION_UPDATE,
+    emitResult({
+      statusCode: status.OK,
+      success: true,
+      message: "Driver location updated",
+      data: updatedTrip,
+    })
+  );
+
+  // Broadcast to driver (consider throttling in production)
+  io.to(updatedTrip.driver.toString()).emit(
+    EnumSocketEvent.TRIP_DRIVER_LOCATION_UPDATE,
+    emitResult({
+      statusCode: status.OK,
+      success: true,
+      message: "Your location updated",
+      data: updatedTrip,
+    })
+  );
+});
+
 const SocketController = {
   validateUser,
   updateOnlineStatus,
   requestTrip,
   acceptTrip,
+  updateDriverLocation,
 };
 
 module.exports = SocketController;
