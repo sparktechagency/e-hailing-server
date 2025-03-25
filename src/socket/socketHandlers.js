@@ -51,6 +51,7 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
       isOnline: false,
     });
     activeDrivers.delete(userId);
+
     console.log("disconnected activeDrivers:", activeDrivers.size);
     console.log(userId, "disconnected");
   });

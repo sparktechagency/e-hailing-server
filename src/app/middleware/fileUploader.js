@@ -1,13 +1,7 @@
 const multer = require("multer");
 const fs = require("fs");
 
-const allowedMimeTypes = [
-  "image/jpeg",
-  "image/png",
-  "image/jpg",
-  "image/webp",
-  "image/webp",
-];
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
 const isValidFileType = (mimetype) => allowedMimeTypes.includes(mimetype);
 
