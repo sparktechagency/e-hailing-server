@@ -81,10 +81,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
 
   const trip = await Trip.create(tripData);
   await trip.populate([
-    {
-      path: "user",
-      select: "name phoneNumber profile_image",
-    },
+    { path: "user", select: "name phoneNumber profile_image" },
   ]);
 
   socket.emit(
@@ -397,6 +394,51 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
   }
 });
 
+const cancelTrip = async (socket, io, payload) => {
+  validateSocketFields(socket, payload, ["tripId", "reason"]);
+
+  const { tripId, reason } = payload;
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const trip = await Trip.findById(tripId)
+        .session(session)
+        .select("status user driver");
+
+      const updatedTrip = await Trip.findByIdAndUpdate(
+        tripId,
+        {
+          status: TripStatus.CANCELLED,
+          cancellationReason: reason,
+          cancelledBy: userRole,
+          cancelledAt: Date.now(),
+        },
+        {
+          new: true,
+          runValidators: true,
+          session,
+        }
+      );
+
+      // Notify both parties
+      io.to(trip.user._id).emit(EnumSocketEvent.TRIP_CANCELLED, updatedTrip);
+
+      if (trip.driver) {
+        io.to(trip.driver._id).emit(EnumSocketEvent.ca, updatedTrip);
+
+        await User.findByIdAndUpdate(trip.driver._id, { isAvailable: true });
+
+        activeDrivers.set(trip.driver._id, socket);
+      }
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// utility functions =====================
+
 const handleStatusNotifications = (io, trip, newStatus) => {
   const eventName = `trip_${newStatus}`;
   const messageMap = {
@@ -462,6 +504,7 @@ const SocketController = {
   acceptTrip,
   updateDriverLocation,
   updateTripStatus,
+  cancelTrip,
 };
 
 module.exports = SocketController;
