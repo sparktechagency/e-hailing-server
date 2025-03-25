@@ -42,7 +42,11 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
   });
 
   socket.on(EnumSocketEvent.TRIP_UPDATE_STATUS, (payload) => {
-    SocketController.updateTripStatus(socket, io, { ...payload, userId });
+    SocketController.updateTripStatus(socket, io, {
+      ...payload,
+      userId,
+      activeDrivers,
+    });
   });
 
   socket.on(EnumSocketEvent.DISCONNECT, () => {
@@ -50,6 +54,7 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
       userId,
       isOnline: false,
     });
+
     activeDrivers.delete(userId);
 
     console.log("disconnected activeDrivers:", activeDrivers.size);

@@ -318,7 +318,8 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
-  const { tripId, newStatus, duration, distance } = payload || {};
+  const { tripId, newStatus, duration, distance, activeDrivers } =
+    payload || {};
 
   validateSocketFields(socket, payload, ["tripId", "newStatus"]);
 
@@ -331,7 +332,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
     TripStatus.CANCELLED,
   ];
 
-  const user = await User.findById(payload.userId).select("role");
+  const user = await User.findById(payload.userId).select("role").lean();
 
   if (user.role === EnumUserRole.USER && newStatus !== TripStatus.CANCELLED)
     emitError(
@@ -341,7 +342,11 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
     );
 
   if (!allowedNewStatus.includes(newStatus))
-    emitError(socket, status.BAD_REQUEST, "Invalid status");
+    emitError(
+      socket,
+      status.BAD_REQUEST,
+      `Invalid status. Valid status are ${allowedNewStatus.join(", ")}`
+    );
 
   if (newStatus === TripStatus.COMPLETED)
     validateSocketFields(socket, payload, ["duration", "distance"]);
@@ -359,7 +364,9 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           finalFare: fareCalculator(duration, distance),
         }),
       };
-      console.log("updateData=========", updateData);
+
+      // console.log("updateData=========", updateData);
+
       // return;
 
       const updatedTrip = await Trip.findByIdAndUpdate(tripId, updateData, {
@@ -367,7 +374,9 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         runValidators: true,
         session,
       });
-      console.log(updatedTrip.status);
+
+      console.log(updatedTrip);
+      // console.log(updatedTrip.status);
       // Notify relevant parties
       if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
 
@@ -440,7 +449,7 @@ const cancelTrip = async (socket, io, payload) => {
 // utility functions =====================
 
 const handleStatusNotifications = (io, trip, newStatus) => {
-  const eventName = `trip_${newStatus}`;
+  const eventName = EnumSocketEvent.TRIP_UPDATE_STATUS;
   const messageMap = {
     [TripStatus.ON_THE_WAY]: {
       rider: "Your driver is on the way",
