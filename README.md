@@ -20,6 +20,7 @@
 4. dashboard | in `D coin` section -> change this to 1 dCoin = 10 MYR.
 5. app | toll adding screen missing
 6. app | show route button. clicking on that button will take driver to google navigation
+7. app | in `driver` section -> statics -> change `this week` to `all time`
 
 ### commented code (uncomment on production only)
 
