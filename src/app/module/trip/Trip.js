@@ -55,7 +55,6 @@ const tripSchema = new Schema(
       },
       coordinates: {
         type: [Number],
-        required: true,
       },
     },
     duration: {

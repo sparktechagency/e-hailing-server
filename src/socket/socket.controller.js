@@ -173,7 +173,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
-  validateSocketFields(socket, payload, ["tripId", "userId"]);
+  validateSocketFields(socket, payload, ["tripId", "userId", "lat", "long"]);
 
   const { tripId, userId: driverId } = payload;
 
@@ -187,12 +187,19 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
           $set: {
             status: TripStatus.ACCEPTED,
             driver: driverId,
+            driverCoordinates: {
+              coordinates: [Number(payload.lat), Number(payload.long)],
+            },
           },
           $inc: {
             __V: 1,
           },
         },
-        { new: true, session }
+        {
+          new: true,
+          runValidators: true,
+          session,
+        }
       ).populate("user driver");
 
       if (!acceptedTrip) {
@@ -365,18 +372,12 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         }),
       };
 
-      // console.log("updateData=========", updateData);
-
-      // return;
-
       const updatedTrip = await Trip.findByIdAndUpdate(tripId, updateData, {
         new: true,
         runValidators: true,
         session,
       });
 
-      console.log(updatedTrip);
-      // console.log(updatedTrip.status);
       // Notify relevant parties
       if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
 
@@ -395,6 +396,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
             session,
           }
         );
+
         activeDrivers.set(updatedTrip.driver._id, socket);
       }
     });
@@ -420,8 +422,6 @@ const cancelTrip = async (socket, io, payload) => {
         {
           status: TripStatus.CANCELLED,
           cancellationReason: reason,
-          cancelledBy: userRole,
-          cancelledAt: Date.now(),
         },
         {
           new: true,
@@ -431,14 +431,30 @@ const cancelTrip = async (socket, io, payload) => {
       );
 
       // Notify both parties
-      io.to(trip.user._id).emit(EnumSocketEvent.TRIP_CANCELLED, updatedTrip);
+      io.to(trip.user.toString()).emit(
+        EnumSocketEvent.TRIP_UPDATE_STATUS,
+        emitResult({
+          statusCode: status.OK,
+          success: true,
+          message: "Trip cancelled",
+          data: updatedTrip,
+        })
+      );
 
       if (trip.driver) {
-        io.to(trip.driver._id).emit(EnumSocketEvent.ca, updatedTrip);
+        io.to(trip.driver.toString()).emit(
+          EnumSocketEvent.TRIP_UPDATE_STATUS,
+          emitResult({
+            statusCode: status.OK,
+            success: true,
+            message: "Trip cancelled",
+            data: updatedTrip,
+          })
+        );
 
-        await User.findByIdAndUpdate(trip.driver._id, { isAvailable: true });
+        await User.findByIdAndUpdate(trip.driver, { isAvailable: true });
 
-        activeDrivers.set(trip.driver._id, socket);
+        activeDrivers.set(trip.driver, socket);
       }
     });
   } finally {
@@ -476,8 +492,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
       driver: "The trip has been cancelled",
     },
   };
-  console.log(trip.driver);
-  console.log(trip.user);
+
   // Notify user
   io.to(trip.user.toString()).emit(
     eventName,
