@@ -81,7 +81,10 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
 
   const trip = await Trip.create(tripData);
   await trip.populate([
-    { path: "user", select: "name phoneNumber profile_image" },
+    {
+      path: "user",
+      select: "name phoneNumber profile_image",
+    },
   ]);
 
   socket.emit(
@@ -157,7 +160,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
         postNotification(
           "Trip Cancelled",
           "No driver available for your trip request",
-          trip.user._id
+          trip.user
         );
       });
     } catch (error) {
@@ -202,10 +205,8 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         }
       ).populate("user driver");
 
-      if (!acceptedTrip) {
+      if (!acceptedTrip)
         emitError(socket, status.CONFLICT, "Trip no longer available");
-        return null;
-      }
 
       const driver = await User.findByIdAndUpdate(
         driverId,
@@ -213,10 +214,7 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         { new: true, session }
       );
 
-      if (!driver) {
-        emitError(socket, status.NOT_FOUND, "Driver not found");
-        return null;
-      }
+      if (!driver) emitError(socket, status.NOT_FOUND, "Driver not found");
 
       return acceptedTrip;
     });
@@ -279,17 +277,16 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
         coordinates: [Number(long), Number(lat)],
       },
     },
-    { new: true, runValidators: true }
+    {
+      new: true,
+      runValidators: true,
+    }
   );
 
-  if (!updatedTrip) {
-    emitError(socket, status.NOT_FOUND, "Trip not found");
-    return null;
-  }
-  if (!updatedTrip.driver) {
+  if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
+
+  if (!updatedTrip.driver)
     emitError(socket, status.NOT_FOUND, "This trip has no driver");
-    return null;
-  }
 
   await User.findByIdAndUpdate(
     updatedTrip.driver,
@@ -298,7 +295,10 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
         coordinates: [Number(long), Number(lat)],
       },
     },
-    { new: true, runValidators: true }
+    {
+      new: true,
+      runValidators: true,
+    }
   );
 
   // Broadcast to user (consider throttling in production)
@@ -325,7 +325,7 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
-  const { tripId, newStatus, duration, distance, activeDrivers } =
+  const { tripId, newStatus, duration, distance, reason, activeDrivers } =
     payload || {};
 
   validateSocketFields(socket, payload, ["tripId", "newStatus"]);
@@ -339,15 +339,6 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
     TripStatus.CANCELLED,
   ];
 
-  const user = await User.findById(payload.userId).select("role").lean();
-
-  if (user.role === EnumUserRole.USER && newStatus !== TripStatus.CANCELLED)
-    emitError(
-      socket,
-      status.FORBIDDEN,
-      `Only driver can update trip status to ${newStatus}`
-    );
-
   if (!allowedNewStatus.includes(newStatus))
     emitError(
       socket,
@@ -358,12 +349,18 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
   if (newStatus === TripStatus.COMPLETED)
     validateSocketFields(socket, payload, ["duration", "distance"]);
 
+  if (newStatus === TripStatus.CANCELLED)
+    validateSocketFields(socket, payload, ["reason"]);
+
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
       const updateData = {
         status: newStatus,
         ...(newStatus === TripStatus.STARTED && { tripStartedAt: Date.now() }),
+        ...(newStatus === TripStatus.CANCELLED && {
+          cancellationReason: reason,
+        }),
         ...(newStatus === TripStatus.COMPLETED && {
           duration,
           distance,
@@ -383,84 +380,32 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
 
       handleStatusNotifications(io, updatedTrip, newStatus);
 
-      // Handle driver availability changes
-      if (newStatus === TripStatus.COMPLETED) {
-        await User.findByIdAndUpdate(
-          updatedTrip.driver._id,
-          {
-            isAvailable: true,
-          },
-          {
-            new: true,
-            runValidators: true,
-            session,
-          }
-        );
+      // Update driver availability for trip completion and cancellation
+      if (
+        [TripStatus.COMPLETED, TripStatus.CANCELLED].includes(newStatus) &&
+        updatedTrip.driver
+      ) {
+        console.log("hitting here");
+        const updateData = {
+          isAvailable: true,
+          ...(newStatus === TripStatus.CANCELLED && {
+            cancellationReason: reason,
+          }),
+        };
 
-        activeDrivers.set(updatedTrip.driver._id, socket);
+        await User.findByIdAndUpdate(updatedTrip.driver, updateData, {
+          new: true,
+          runValidators: true,
+          session,
+        });
+
+        activeDrivers.set(updatedTrip.driver.toString(), socket);
       }
     });
   } finally {
     session.endSession();
   }
 });
-
-const cancelTrip = async (socket, io, payload) => {
-  validateSocketFields(socket, payload, ["tripId", "reason"]);
-
-  const { tripId, reason } = payload;
-
-  const session = await mongoose.startSession();
-  try {
-    await session.withTransaction(async () => {
-      const trip = await Trip.findById(tripId)
-        .session(session)
-        .select("status user driver");
-
-      const updatedTrip = await Trip.findByIdAndUpdate(
-        tripId,
-        {
-          status: TripStatus.CANCELLED,
-          cancellationReason: reason,
-        },
-        {
-          new: true,
-          runValidators: true,
-          session,
-        }
-      );
-
-      // Notify both parties
-      io.to(trip.user.toString()).emit(
-        EnumSocketEvent.TRIP_UPDATE_STATUS,
-        emitResult({
-          statusCode: status.OK,
-          success: true,
-          message: "Trip cancelled",
-          data: updatedTrip,
-        })
-      );
-
-      if (trip.driver) {
-        io.to(trip.driver.toString()).emit(
-          EnumSocketEvent.TRIP_UPDATE_STATUS,
-          emitResult({
-            statusCode: status.OK,
-            success: true,
-            message: "Trip cancelled",
-            data: updatedTrip,
-          })
-        );
-
-        await User.findByIdAndUpdate(trip.driver, { isAvailable: true });
-
-        activeDrivers.set(trip.driver, socket);
-      }
-    });
-  } finally {
-    session.endSession();
-  }
-};
 
 // utility functions =====================
 
@@ -499,26 +444,27 @@ const handleStatusNotifications = (io, trip, newStatus) => {
     emitResult({
       statusCode: status.OK,
       success: true,
-      message: messageMap[newStatus].user,
+      message: messageMap[newStatus].rider,
       data: trip,
     })
   );
 
   postNotification(`Trip update`, messageMap[newStatus].rider, trip.user);
 
-  // Notify driver
-  io.to(trip.driver.toString()).emit(
-    eventName,
-    emitResult({
-      statusCode: status.OK,
-      success: true,
-      message: messageMap[newStatus].driver,
-      data: trip,
-    })
-  );
+  // Notify driver if any
+  if (trip.driver) {
+    io.to(trip.driver.toString()).emit(
+      eventName,
+      emitResult({
+        statusCode: status.OK,
+        success: true,
+        message: messageMap[newStatus].driver,
+        data: trip,
+      })
+    );
 
-  if (trip.driver)
     postNotification(`Trip update`, messageMap[newStatus].driver, trip.driver);
+  }
 };
 
 const SocketController = {
@@ -528,7 +474,6 @@ const SocketController = {
   acceptTrip,
   updateDriverLocation,
   updateTripStatus,
-  cancelTrip,
 };
 
 module.exports = SocketController;
