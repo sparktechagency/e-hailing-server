@@ -81,10 +81,28 @@ const deleteTrip = async (userData, payload) => {
   return trip;
 };
 
+const updateTollFee = async (userData, payload) => {
+  validateFields(payload, ["tripId", "tollFee"]);
+
+  const trip = await Trip.findById(payload.tripId).lean();
+  if (!trip) throw new ApiError(status.NOT_FOUND, "Trip not found");
+
+  const newTollFee = Math.max(0, trip.tollFee + Number(payload.tollFee));
+
+  const updatedTrip = await Trip.findOneAndUpdate(
+    { _id: payload.tripId },
+    { tollFee: newTollFee },
+    { new: true }
+  );
+
+  return updatedTrip;
+};
+
 const TripService = {
   getTrip,
   getAllTrips,
   deleteTrip,
+  updateTollFee,
 };
 
 module.exports = TripService;

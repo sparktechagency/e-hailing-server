@@ -32,10 +32,21 @@ const deleteTrip = catchAsync(async (req, res) => {
   });
 });
 
+const updateTollFee = catchAsync(async (req, res) => {
+  const result = await TripService.updateTollFee(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Toll fee updated",
+    data: result,
+  });
+});
+
 const TripController = {
   getTrip,
   getAllTrips,
   deleteTrip,
+  updateTollFee,
 };
 
 module.exports = TripController;
