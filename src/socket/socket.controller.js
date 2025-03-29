@@ -1,4 +1,7 @@
+const cron = require("node-cron");
 const { default: status } = require("http-status");
+const { default: mongoose } = require("mongoose");
+
 const User = require("../app/module/user/User");
 const emitError = require("./emitError");
 const socketCatchAsync = require("../util/socketCatchAsync");
@@ -7,7 +10,6 @@ const fareCalculator = require("../util/fareCalculator");
 const Trip = require("../app/module/trip/Trip");
 const { EnumSocketEvent, EnumUserRole, TripStatus } = require("../util/enum");
 const postNotification = require("../util/postNotification");
-const { default: mongoose } = require("mongoose");
 const emitResult = require("./emitResult");
 const OnlineSession = require("../app/module/onlineSession/OnlineSession");
 
@@ -46,13 +48,13 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
 
   // start the session if driver is online
   if (updatedUser.role === EnumUserRole.DRIVER && isOnline) {
-    const test = await OnlineSession.create({
+    await OnlineSession.create({
       driver: updatedUser._id,
+      start: new Date(),
     });
-    console.log("test----------------", test);
   }
 
-  // end the session if driver is offline
+  // if driver is offline end the session and calculate the online duration
   if (updatedUser.role === EnumUserRole.DRIVER && !isOnline) {
     const onlineSession = await OnlineSession.findOne({
       driver: updatedUser._id,
@@ -60,17 +62,14 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
       duration: { $exists: false },
     }).sort({ createdAt: -1 });
 
-    console.log("onlineSession----------------", onlineSession);
-    onlineSession.end = new Date();
-    onlineSession.duration =
-      onlineSession.end.getTime() - new Date(onlineSession.start).getTime();
-    // onlineSession.duration =
-    //   new Date(onlineSession.end).getTime() -
-    //   new Date(onlineSession.start).getTime();
+    const end = new Date();
+    const duration = end - onlineSession.start;
 
-    console.log(`Online duration: ${onlineSession.duration / 1000} seconds`);
-
+    onlineSession.end = end;
+    onlineSession.duration = duration;
     await onlineSession.save();
+
+    console.log("Online duration:", onlineSession.duration / 1000, "seconds");
   }
 
   socket.emit(
@@ -499,6 +498,8 @@ const handleStatusNotifications = (io, trip, newStatus) => {
     postNotification(`Trip update`, messageMap[newStatus].driver, trip.driver);
   }
 };
+
+// schedule a cron job every hour to remove OnlineSessions that does not have a duration field
 
 const SocketController = {
   validateUser,
