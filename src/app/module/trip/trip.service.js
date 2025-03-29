@@ -3,17 +3,29 @@ const Trip = require("./Trip");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
-
-const postTrip = async (userData, payload) => {
-  // Add your logic here
-};
+const { EnumUserRole } = require("../../../util/enum");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
 
   const trip = await Trip.findOne({
     _id: query.tripId,
-  }).lean();
+  })
+    .populate([
+      {
+        path: "user",
+        select: "-createdAt -updatedAt -__v",
+      },
+      {
+        path: "driver",
+        select: "-createdAt -updatedAt -__v",
+      },
+      {
+        path: "car",
+        select: "-createdAt -updatedAt -__v",
+      },
+    ])
+    .lean();
 
   if (!trip) throw new ApiError(status.NOT_FOUND, "Trip not found");
 
@@ -21,14 +33,30 @@ const getTrip = async (userData, query) => {
 };
 
 const getAllTrips = async (userData, query) => {
-  const tripQuery = new QueryBuilder(Trip.find({}).lean(), query)
-    .search([])
+  const tripQuery = new QueryBuilder(
+    Trip.find({
+      ...(userData.role === !EnumUserRole.ADMIN && { user: userData.userId }),
+    })
+      .populate([
+        {
+          path: "user",
+          select: "name profile_image",
+        },
+        {
+          path: "driver",
+          select: "name profile_image",
+        },
+      ])
+      .lean(),
+    query
+  )
+    .search(["status", "cancellationReason", "dropOffAddress", "pickUpAddress"])
     .filter()
     .sort()
     .paginate()
     .fields();
 
-  const [trip, meta] = await Promise.all([
+  const [trips, meta] = await Promise.all([
     tripQuery.modelQuery,
     tripQuery.countTotal(),
   ]);
@@ -37,10 +65,6 @@ const getAllTrips = async (userData, query) => {
     meta,
     trips,
   };
-};
-
-const updateTrip = async (userData, payload) => {
-  // Add your logic here
 };
 
 const deleteTrip = async (userData, payload) => {
@@ -57,10 +81,8 @@ const deleteTrip = async (userData, payload) => {
 };
 
 const TripService = {
-  postTrip,
   getTrip,
   getAllTrips,
-  updateTrip,
   deleteTrip,
 };
 
