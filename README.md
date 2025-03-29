@@ -26,6 +26,10 @@
 
 1. in `car.service`, in `updateAssignCarToDriver`, prevent a driver from being assigned to more than one car at a time
 
+### fix code
+
+1. app | before completing a trip, calculate tollFee and add it to the final amount
+
 ### collections
 
 1. auths

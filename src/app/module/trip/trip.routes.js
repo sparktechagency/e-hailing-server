@@ -16,6 +16,11 @@ router
     "/delete-trip",
     auth(config.auth_level.admin),
     TripController.deleteTrip
+  )
+  .patch(
+    "/update-toll-fee",
+    auth(config.auth_level.driver),
+    TripController.updateTollFee
   );
 
 module.exports = router;

@@ -6,6 +6,7 @@ const validateFields = require("../../../util/validateFields");
 const { EnumUserRole } = require("../../../util/enum");
 
 const getTrip = async (userData, query) => {
+  console.log(query);
   validateFields(query, ["tripId"]);
 
   const trip = await Trip.findOne({
@@ -14,11 +15,11 @@ const getTrip = async (userData, query) => {
     .populate([
       {
         path: "user",
-        select: "-createdAt -updatedAt -__v",
+        select: "-_id -authId -createdAt -updatedAt -__v",
       },
       {
         path: "driver",
-        select: "-createdAt -updatedAt -__v",
+        select: "profile_image name email",
       },
       {
         path: "car",
@@ -80,10 +81,28 @@ const deleteTrip = async (userData, payload) => {
   return trip;
 };
 
+const updateTollFee = async (userData, payload) => {
+  validateFields(payload, ["tripId", "tollFee"]);
+
+  const trip = await Trip.findById(payload.tripId).lean();
+  if (!trip) throw new ApiError(status.NOT_FOUND, "Trip not found");
+
+  const newTollFee = Math.max(0, trip.tollFee + Number(payload.tollFee));
+
+  const updatedTrip = await Trip.findOneAndUpdate(
+    { _id: payload.tripId },
+    { tollFee: newTollFee },
+    { new: true }
+  );
+
+  return updatedTrip;
+};
+
 const TripService = {
   getTrip,
   getAllTrips,
   deleteTrip,
+  updateTollFee,
 };
 
 module.exports = TripService;
