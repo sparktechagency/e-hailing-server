@@ -9,6 +9,7 @@ const { EnumSocketEvent, EnumUserRole, TripStatus } = require("../util/enum");
 const postNotification = require("../util/postNotification");
 const { default: mongoose } = require("mongoose");
 const emitResult = require("./emitResult");
+const OnlineSession = require("../app/module/onlineSession/OnlineSession");
 
 // track active timeouts for trip cancellation
 const tripTimeouts = new Map();
@@ -35,11 +36,42 @@ const validateUser = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
+  const { isOnline } = payload;
+
   const updatedUser = await User.findByIdAndUpdate(
     payload.userId,
-    { isOnline: payload.isOnline },
+    { isOnline },
     { new: true }
   );
+
+  // start the session if driver is online
+  if (updatedUser.role === EnumUserRole.DRIVER && isOnline) {
+    const test = await OnlineSession.create({
+      driver: updatedUser._id,
+    });
+    console.log("test----------------", test);
+  }
+
+  // end the session if driver is offline
+  if (updatedUser.role === EnumUserRole.DRIVER && !isOnline) {
+    const onlineSession = await OnlineSession.findOne({
+      driver: updatedUser._id,
+      end: { $exists: false },
+      duration: { $exists: false },
+    }).sort({ createdAt: -1 });
+
+    console.log("onlineSession----------------", onlineSession);
+    onlineSession.end = new Date();
+    onlineSession.duration =
+      onlineSession.end.getTime() - new Date(onlineSession.start).getTime();
+    // onlineSession.duration =
+    //   new Date(onlineSession.end).getTime() -
+    //   new Date(onlineSession.start).getTime();
+
+    console.log(`Online duration: ${onlineSession.duration / 1000} seconds`);
+
+    await onlineSession.save();
+  }
 
   socket.emit(
     EnumSocketEvent.ONLINE_STATUS,
@@ -385,7 +417,6 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         [TripStatus.COMPLETED, TripStatus.CANCELLED].includes(newStatus) &&
         updatedTrip.driver
       ) {
-        console.log("hitting here");
         const updateData = {
           isAvailable: true,
           ...(newStatus === TripStatus.CANCELLED && {
@@ -402,6 +433,8 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         activeDrivers.set(updatedTrip.driver.toString(), socket);
       }
     });
+  } catch (error) {
+    console.log(error);
   } finally {
     session.endSession();
   }
