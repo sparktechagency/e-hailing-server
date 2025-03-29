@@ -12,6 +12,7 @@ const { EnumSocketEvent, EnumUserRole, TripStatus } = require("../util/enum");
 const postNotification = require("../util/postNotification");
 const emitResult = require("./emitResult");
 const OnlineSession = require("../app/module/onlineSession/OnlineSession");
+const { logger } = require("../util/logger");
 
 // track active timeouts for trip cancellation
 const tripTimeouts = new Map();
@@ -499,7 +500,26 @@ const handleStatusNotifications = (io, trip, newStatus) => {
   }
 };
 
-// schedule a cron job every hour to remove OnlineSessions that does not have a duration field
+const removeStaleOnlineSessions = async () => {
+  try {
+    console.log("hit every hour", new Date().toLocaleString());
+
+    const result = await OnlineSession.deleteMany({
+      duration: { $exists: false },
+    });
+
+    if (result.deletedCount > 0)
+      logger.info(
+        `Removed ${result.deletedCount} OnlineSessions without a duration`,
+        new Date().toLocaleString()
+      );
+  } catch (error) {
+    logger.error("⌚ Error removing OnlineSessions", error);
+  }
+};
+
+// Schedule a cron job to run every hour for removing OnlineSessions without a duration field
+cron.schedule("0 * * * *", removeStaleOnlineSessions);
 
 const SocketController = {
   validateUser,
