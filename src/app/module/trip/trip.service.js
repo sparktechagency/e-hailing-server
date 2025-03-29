@@ -6,6 +6,7 @@ const validateFields = require("../../../util/validateFields");
 const { EnumUserRole } = require("../../../util/enum");
 
 const getTrip = async (userData, query) => {
+  console.log(query);
   validateFields(query, ["tripId"]);
 
   const trip = await Trip.findOne({
@@ -14,11 +15,11 @@ const getTrip = async (userData, query) => {
     .populate([
       {
         path: "user",
-        select: "-createdAt -updatedAt -__v",
+        select: "-_id -authId -createdAt -updatedAt -__v",
       },
       {
         path: "driver",
-        select: "-createdAt -updatedAt -__v",
+        select: "profile_image name email",
       },
       {
         path: "car",
