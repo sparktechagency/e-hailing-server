@@ -6,7 +6,6 @@ const validateFields = require("../../../util/validateFields");
 const { EnumUserRole } = require("../../../util/enum");
 
 const getTrip = async (userData, query) => {
-  console.log(query);
   validateFields(query, ["tripId"]);
 
   const trip = await Trip.findOne({
