@@ -81,6 +81,7 @@ const deleteTrip = async (userData, payload) => {
 };
 
 const updateTollFee = async (userData, payload) => {
+  // Updates the toll fee of a trip by adding the provided tollFee to the existing one.
   validateFields(payload, ["tripId", "tollFee"]);
 
   const trip = await Trip.findById(payload.tripId).lean();
