@@ -1,5 +1,5 @@
 const { Schema, model } = require("mongoose");
-const { TripStatus } = require("../../../util/enum");
+const { TripStatus, EnumPaymentType } = require("../../../util/enum");
 const ObjectId = Schema.Types.ObjectId;
 
 const tripSchema = new Schema(
@@ -82,6 +82,15 @@ const tripSchema = new Schema(
     },
     cancellationReason: {
       type: [String],
+    },
+    paymentType: {
+      type: String,
+      enum: {
+        values: [EnumPaymentType.CASH, EnumPaymentType.COIN],
+        message: `Invalid trip status. Allowed values: ${Object.values(
+          EnumPaymentType
+        ).join(", ")}`,
+      },
     },
     status: {
       type: String,
