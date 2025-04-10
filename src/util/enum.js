@@ -5,6 +5,11 @@ const EnumUserRole = {
 };
 
 const EnumPaymentType = {
+  CASH: "cash",
+  COIN: "coin",
+};
+
+const EnumPaymentStatus = {
   SUCCEEDED: "succeeded",
   UNPAID: "unpaid",
   TRANSFERRED: "transferred",
@@ -53,6 +58,7 @@ const UserAccountStatus = {
 module.exports = {
   EnumUserRole,
   EnumPaymentType,
+  EnumPaymentStatus,
   EnumSocketEvent,
   LoginProvider,
   TripStatus,

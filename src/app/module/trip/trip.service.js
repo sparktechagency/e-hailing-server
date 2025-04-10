@@ -33,6 +33,11 @@ const getTrip = async (userData, query) => {
 };
 
 const getAllTrips = async (userData, query) => {
+  /**
+   * Retrieves a list of trips based on user role and query parameters.
+   * - If the user is an **admin**, fetches all trips.
+   * - Otherwise, fetches trips associated with the user or driver.
+   */
   const tripQuery = new QueryBuilder(
     Trip.find({
       ...(userData.role === !EnumUserRole.ADMIN && { user: userData.userId }),
@@ -96,6 +101,15 @@ const updateTollFee = async (userData, payload) => {
   );
 
   return updatedTrip;
+};
+
+const getTripStatistics = async (userData, query) => {
+  const totalEarn = "";
+  const cash = "";
+  const coin = "";
+  const numberOfTrips = "";
+  const activeHours = "";
+  const tripDistance = "";
 };
 
 const TripService = {
