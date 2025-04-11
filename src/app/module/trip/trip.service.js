@@ -4,6 +4,7 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const { EnumUserRole, EnumPaymentType } = require("../../../util/enum");
+const OnlineSession = require("../onlineSession/OnlineSession");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -108,7 +109,6 @@ const getTripStatistics = async (userData, query) => {
 
   const { filter = "all-time" } = query;
   const dateFilter = getTimeRange(filter.toLowerCase().trim());
-  console.log(dateFilter);
 
   const matchStage = {
     // status: TripStatus.COMPLETED,
@@ -157,6 +157,24 @@ const getTripStatistics = async (userData, query) => {
     },
   ]);
 
+  const result = await OnlineSession.aggregate([
+    {
+      $match: {
+        createdAt: dateFilter,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: {
+          $sum: {
+            $divide: ["$duration", 1000 * 60], // convert ms to minutes
+          },
+        },
+      },
+    },
+  ]);
+
   const format = (arr) => (arr[0] ? arr[0].total || arr[0].count : 0);
 
   return {
@@ -165,6 +183,7 @@ const getTripStatistics = async (userData, query) => {
     coin: format(stats[0].earningsByCoin),
     numberOfTrips: format(stats[0].totalTrips),
     tripDistance: format(stats[0].totalDistance),
+    activeHours: format(result),
   };
 };
 
