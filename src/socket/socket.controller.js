@@ -518,8 +518,8 @@ const removeStaleOnlineSessions = async () => {
   }
 };
 
-// Schedule a cron job to run every hour for removing OnlineSessions without a duration field
-cron.schedule("0 * * * *", removeStaleOnlineSessions);
+// Schedule a cron job to run at midnight every day for removing OnlineSessions without a duration field
+cron.schedule("0 0 * * *", removeStaleOnlineSessions);
 
 const SocketController = {
   validateUser,
