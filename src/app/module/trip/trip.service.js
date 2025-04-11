@@ -3,7 +3,7 @@ const Trip = require("./Trip");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
-const { EnumUserRole } = require("../../../util/enum");
+const { EnumUserRole, EnumPaymentType } = require("../../../util/enum");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -104,12 +104,108 @@ const updateTollFee = async (userData, payload) => {
 };
 
 const getTripStatistics = async (userData, query) => {
-  const totalEarn = "";
-  const cash = "";
-  const coin = "";
-  const numberOfTrips = "";
   const activeHours = "";
-  const tripDistance = "";
+
+  const { filter = "all-time" } = query;
+  const dateFilter = getTimeRange(filter.toLowerCase().trim());
+  console.log(dateFilter);
+
+  const matchStage = {
+    // status: TripStatus.COMPLETED,
+    // ...(userData.role !== EnumUserRole.ADMIN && { driver: userData.userId }),
+  };
+
+  if (Object.keys(dateFilter).length > 0)
+    matchStage.tripCompletedAt = dateFilter;
+
+  const stats = await Trip.aggregate([
+    { $match: matchStage },
+    {
+      $facet: {
+        totalEarnings: [
+          {
+            $group: { _id: null, total: { $sum: "$finalFare" } },
+          },
+        ],
+        earningsByCash: [
+          {
+            $match: { paymentType: EnumPaymentType.CASH },
+          },
+          {
+            $group: { _id: null, total: { $sum: "$finalFare" } },
+          },
+        ],
+        earningsByCoin: [
+          {
+            $match: { paymentType: EnumPaymentType.COIN },
+          },
+          {
+            $group: { _id: null, total: { $sum: "$finalFareInCoins" } },
+          },
+        ],
+        totalTrips: [
+          {
+            $count: "count",
+          },
+        ],
+        totalDistance: [
+          {
+            $group: { _id: null, total: { $sum: "$distance" } },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const format = (arr) => (arr[0] ? arr[0].total || arr[0].count : 0);
+
+  return {
+    totalEarn: format(stats[0].totalEarnings),
+    cash: format(stats[0].earningsByCash),
+    coin: format(stats[0].earningsByCoin),
+    numberOfTrips: format(stats[0].totalTrips),
+    tripDistance: format(stats[0].totalDistance),
+  };
+};
+
+// utility functions ==================
+const getTimeRange = (filter) => {
+  const now = new Date();
+  let startDate = null;
+
+  const allowedFilters = [
+    "today",
+    "last-7-days",
+    "this-month",
+    "this-year",
+    "all-time",
+  ];
+
+  if (!allowedFilters.includes(filter)) {
+    throw new ApiError(
+      status.BAD_REQUEST,
+      `Invalid filter. Allowed values: ${allowedFilters.join(", ")}`
+    );
+  }
+
+  switch (filter) {
+    case "today":
+      startDate = new Date(now.setHours(0, 0, 0, 0));
+      break;
+    case "last-7-days":
+      startDate = new Date(now.setDate(now.getDate() - 6));
+      break;
+    case "this-month":
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case "this-year":
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    case "all-time":
+      return {}; // No filter for all time
+  }
+
+  return { $gte: startDate };
 };
 
 const TripService = {
@@ -117,6 +213,7 @@ const TripService = {
   getAllTrips,
   deleteTrip,
   updateTollFee,
+  getTripStatistics,
 };
 
 module.exports = TripService;
