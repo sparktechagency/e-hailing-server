@@ -70,8 +70,12 @@ const tripSchema = new Schema(
     },
     tollFee: {
       type: Number,
+      default: 0,
     },
     finalFare: {
+      type: Number,
+    },
+    finalFareInCoins: {
       type: Number,
     },
     tripStartedAt: {

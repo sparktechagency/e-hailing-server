@@ -42,11 +42,22 @@ const updateTollFee = catchAsync(async (req, res) => {
   });
 });
 
+const getTripStatistics = catchAsync(async (req, res) => {
+  const result = await TripService.getTripStatistics(req.user, req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Trip statistics retrieved",
+    data: result,
+  });
+});
+
 const TripController = {
   getTrip,
   getAllTrips,
   deleteTrip,
   updateTollFee,
+  getTripStatistics,
 };
 
 module.exports = TripController;

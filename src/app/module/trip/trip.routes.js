@@ -21,6 +21,11 @@ router
     "/update-toll-fee",
     auth(config.auth_level.driver),
     TripController.updateTollFee
+  )
+  .get(
+    "/get-trip-statistics",
+    auth(config.auth_level.driver),
+    TripController.getTripStatistics
   );
 
 module.exports = router;
