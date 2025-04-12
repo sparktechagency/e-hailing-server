@@ -3,9 +3,44 @@ const Chat = require("./Chat");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
+const postNotification = require("../../../util/postNotification");
+const User = require("../user/User");
 
 const postChat = async (userData, payload) => {
-  // Add your logic here
+  const { userId } = userData;
+  const { receiverId } = payload;
+
+  validateFields(payload, ["receiverId"]);
+
+  const [user, receiver, existingChat] = await Promise.all([
+    User.findById(userId).lean(),
+    User.findById(receiverId).lean(),
+    Chat.findOne({
+      participants: { $all: [userId, receiverId] },
+    }),
+  ]);
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+  if (!receiver) throw new ApiError(status.NOT_FOUND, "Receiver not found");
+  if (existingChat) return existingChat;
+
+  const newChat = await Chat.create({
+    participants: [userId, receiverId],
+    messages: [],
+  });
+
+  postNotification(
+    "New message",
+    "You have started a new conversation",
+    receiverId
+  );
+  postNotification(
+    "New message",
+    "You have started a new conversation",
+    userId
+  );
+
+  return newChat;
 };
 
 const getChat = async (userData, query) => {
