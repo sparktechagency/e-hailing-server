@@ -7,7 +7,11 @@ const router = express.Router();
 
 router
   .post("/post-chat", auth(config.auth_level.user), ChatController.postChat)
-  .get("/get-chat", auth(config.auth_level.user), ChatController.getChat)
+  .get(
+    "/get-chat-messages",
+    auth(config.auth_level.user),
+    ChatController.getChatMessages
+  )
   .get(
     "/get-all-chats",
     auth(config.auth_level.user),
