@@ -49,6 +49,14 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
     });
   });
 
+  // socket.on(EnumSocketEvent.START_CHAT, async (data) => {
+  //   SocketController.startChat(socket, io, userId, data);
+  // });
+
+  // socket.on(EnumSocketEvent.SEND_MESSAGE, async (data) => {
+  //   SocketController.sendMessage(socket, io, userId, data);
+  // });
+
   socket.on(EnumSocketEvent.DISCONNECT, () => {
     SocketController.updateOnlineStatus(socket, io, {
       userId,

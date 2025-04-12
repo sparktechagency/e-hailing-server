@@ -12,6 +12,7 @@ const CarRoutes = require("../module/car/car.routes");
 const DCoinRoutes = require("../module/dcoin/dcoin.routes");
 const TripRoutes = require("../module/trip/trip.routes");
 const SavedLocationRoutes = require("../module/savedLocation/savedLocation.routes");
+const ChatRoutes = require("../module/chat/chat.routes");
 
 const moduleRoutes = [
   {
@@ -61,6 +62,10 @@ const moduleRoutes = [
   {
     path: "/saved-location",
     route: SavedLocationRoutes,
+  },
+  {
+    path: "/chat",
+    route: ChatRoutes,
   },
 ];
 
