@@ -55,6 +55,7 @@
 5.  app | toll adding screen missing
 6.  app | show route button. clicking on that button will take driver to google navigation
 7.  app | in `driver` section -> statics -> change `this week` to `all time`
+8.  no card/online payment
 
 </details>
 
