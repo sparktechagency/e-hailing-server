@@ -12,8 +12,8 @@ const postChat = catchAsync(async (req, res) => {
   });
 });
 
-const getChat = catchAsync(async (req, res) => {
-  const result = await ChatService.getChat(req.user, req.query);
+const getChatMessages = catchAsync(async (req, res) => {
+  const result = await ChatService.getChatMessages(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -34,7 +34,7 @@ const getAllChats = catchAsync(async (req, res) => {
 
 const ChatController = {
   postChat,
-  getChat,
+  getChatMessages,
   getAllChats,
 };
 

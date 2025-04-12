@@ -43,12 +43,19 @@ const postChat = async (userData, payload) => {
   return newChat;
 };
 
-const getChat = async (userData, query) => {
+const getChatMessages = async (userData, query) => {
   validateFields(query, ["chatId"]);
 
   const chat = await Chat.findOne({
     _id: query.chatId,
-  }).lean();
+  })
+    .populate([
+      {
+        path: "participants",
+        select: "name phoneNumber profile_image",
+      },
+    ])
+    .lean();
 
   if (!chat) throw new ApiError(status.NOT_FOUND, "Chat not found");
 
@@ -76,7 +83,7 @@ const getAllChats = async (userData, query) => {
 
 const ChatService = {
   postChat,
-  getChat,
+  getChatMessages,
   getAllChats,
 };
 
