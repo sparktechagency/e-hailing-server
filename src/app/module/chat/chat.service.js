@@ -5,6 +5,7 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const postNotification = require("../../../util/postNotification");
 const User = require("../user/User");
+const { default: mongoose } = require("mongoose");
 
 const postChat = async (userData, payload) => {
   const { userId } = userData;
@@ -63,20 +64,60 @@ const getChatMessages = async (userData, query) => {
 };
 
 const getAllChats = async (userData, query) => {
-  const chatQuery = new QueryBuilder(Chat.find({}).lean(), query)
-    .search([])
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const userId = mongoose.Types.ObjectId.createFromHexString(userData.userId);
 
-  const [chats, meta] = await Promise.all([
-    chatQuery.modelQuery,
-    chatQuery.countTotal(),
+  const chats = await Chat.aggregate([
+    {
+      $match: {
+        participants: {
+          $in: [userId],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "messages",
+        let: {
+          messageIds: "$messages",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ["$_id", "$$messageIds"] },
+                  { $eq: ["$receiver", userId] },
+                  { $eq: ["$isRead", false] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "unreadMessages",
+      },
+    },
+    {
+      $addFields: {
+        unRead: { $size: "$unreadMessages" },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "participants",
+        foreignField: "_id",
+        as: "participants",
+      },
+    },
+    {
+      $project: {
+        unreadMessages: 0,
+      },
+    },
   ]);
 
   return {
-    meta,
+    // meta,
     chats,
   };
 };
