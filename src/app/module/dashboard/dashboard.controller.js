@@ -76,6 +76,16 @@ const editDriver = catchAsync(async (req, res) => {
   });
 });
 
+const getUserTripStats = catchAsync(async (req, res) => {
+  const result = await DashboardService.getUserTripStats(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User trip statistics retrieved successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   revenue,
@@ -84,6 +94,7 @@ const DashboardController = {
   getDriver,
   getAllDriversOrUsers,
   editDriver,
+  getUserTripStats,
 };
 
 module.exports = DashboardController;

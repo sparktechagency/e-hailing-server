@@ -9,6 +9,8 @@ const unlinkFile = require("../../../util/unlinkFile");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const Car = require("../car/Car");
 const Admin = require("../admin/Admin");
+const Trip = require("../trip/Trip");
+const { default: mongoose } = require("mongoose");
 
 // overview ========================
 
@@ -352,6 +354,50 @@ const editDriver = async (req) => {
   return updatedDriver;
 };
 
+const getUserTripStats = async (query) => {
+  validateFields(query, ["userId"]);
+
+  const stats = await Trip.aggregate([
+    {
+      $match: {
+        user: mongoose.Types.ObjectId.createFromHexString(query.userId),
+      },
+    },
+    {
+      $group: {
+        _id: "$status",
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: {
+        _id: 1,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalTrip: { $sum: "$count" },
+        statusCounts: {
+          $push: {
+            status: "$_id",
+            count: "$count",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalTrip: 1,
+        statusCounts: 1,
+      },
+    },
+  ]);
+
+  return stats[0] || { totalTrip: 0, statusCounts: [] };
+};
+
 const DashboardService = {
   revenue,
   totalOverview,
@@ -360,6 +406,7 @@ const DashboardService = {
   getDriver,
   getAllDriversOrUsers,
   editDriver,
+  getUserTripStats,
 };
 
 module.exports = DashboardService;
