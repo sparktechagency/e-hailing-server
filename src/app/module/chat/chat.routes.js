@@ -16,6 +16,11 @@ router
     "/get-all-chats",
     auth(config.auth_level.user),
     ChatController.getAllChats
+  )
+  .patch(
+    "/update-message-as-seen",
+    auth(config.auth_level.user),
+    ChatController.updateMessageAsSeen
   );
 
 module.exports = router;

@@ -32,10 +32,21 @@ const getAllChats = catchAsync(async (req, res) => {
   });
 });
 
+const updateMessageAsSeen = catchAsync(async (req, res) => {
+  const result = await ChatService.updateMessageAsSeen(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Message updated as seen",
+    data: result,
+  });
+});
+
 const ChatController = {
   postChat,
   getChatMessages,
   getAllChats,
+  updateMessageAsSeen,
 };
 
 module.exports = ChatController;
