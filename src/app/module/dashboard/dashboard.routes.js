@@ -39,6 +39,11 @@ router
     auth(config.auth_level.admin),
     uploadFile(),
     DashboardController.editDriver
+  )
+  .get(
+    "/get-user-trip-stats",
+    auth(config.auth_level.admin),
+    DashboardController.getUserTripStats
   );
 
 module.exports = router;
