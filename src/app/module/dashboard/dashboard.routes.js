@@ -15,6 +15,7 @@ router
     DashboardController.totalOverview
   )
   .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue)
+  .get("/growth", auth(config.auth_level.admin), DashboardController.growth)
 
   // driver management ==================
   .post(
