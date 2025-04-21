@@ -7,8 +7,11 @@ const validateFields = require("../../../util/validateFields");
 const ApiError = require("../../../error/ApiError");
 const unlinkFile = require("../../../util/unlinkFile");
 const QueryBuilder = require("../../../builder/queryBuilder");
+const Car = require("../car/Car");
+const Admin = require("../admin/Admin");
 
 // overview ========================
+
 const revenue = async (query) => {
   const { year: strYear } = query;
   const year = Number(strYear);
@@ -98,19 +101,25 @@ const revenue = async (query) => {
 };
 
 const totalOverview = async () => {
-  const [totalAuth, totalUser] = await Promise.all([
-    Auth.countDocuments(),
-    User.countDocuments(),
-    Services.countDocuments(),
-  ]);
+  const [totalUser, totalDriver, totalAdmin, totalAuth, totalCars] =
+    await Promise.all([
+      User.countDocuments({ role: EnumUserRole.DRIVER }),
+      User.countDocuments({ role: EnumUserRole.USER }),
+      Admin.countDocuments(),
+      Auth.countDocuments(),
+      Car.countDocuments(),
+    ]);
 
   return {
-    totalAuth,
     totalUser,
+    totalDriver,
+    totalAdmin,
+    totalAuth,
+    totalCars,
   };
 };
 
-// driver management
+// driver management ========================
 
 const postDriver = async (req) => {
   const { body: payload, files, user } = req;
