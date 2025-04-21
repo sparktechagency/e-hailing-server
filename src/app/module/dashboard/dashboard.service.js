@@ -101,18 +101,29 @@ const revenue = async (query) => {
 };
 
 const totalOverview = async () => {
-  const [totalUser, totalDriver, totalAdmin, totalAuth, totalCars] =
-    await Promise.all([
-      User.countDocuments({ role: EnumUserRole.DRIVER }),
-      User.countDocuments({ role: EnumUserRole.USER }),
-      Admin.countDocuments(),
-      Auth.countDocuments(),
-      Car.countDocuments(),
-    ]);
+  const [
+    totalDriver,
+    onlineDriver,
+    totalUser,
+    onlineUser,
+    totalAdmin,
+    totalAuth,
+    totalCars,
+  ] = await Promise.all([
+    User.countDocuments({ role: EnumUserRole.DRIVER }),
+    User.countDocuments({ role: EnumUserRole.DRIVER, isOnline: true }),
+    User.countDocuments({ role: EnumUserRole.USER }),
+    User.countDocuments({ role: EnumUserRole.USER, isOnline: true }),
+    Admin.countDocuments(),
+    Auth.countDocuments(),
+    Car.countDocuments(),
+  ]);
 
   return {
-    totalUser,
     totalDriver,
+    onlineDriver,
+    totalUser,
+    onlineUser,
     totalAdmin,
     totalAuth,
     totalCars,
