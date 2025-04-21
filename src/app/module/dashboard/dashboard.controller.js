@@ -2,7 +2,8 @@ const catchAsync = require("../../../util/catchAsync");
 const sendResponse = require("../../../util/sendResponse");
 const DashboardService = require("./dashboard.service");
 
-// overview
+// overview ========================
+
 const totalOverview = catchAsync(async (req, res) => {
   const result = await DashboardService.totalOverview();
   sendResponse(res, {
@@ -23,7 +24,18 @@ const revenue = catchAsync(async (req, res) => {
   });
 });
 
-// driver management
+const growth = catchAsync(async (req, res) => {
+  const result = await DashboardService.growth(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Growth retrieved successfully",
+    data: result,
+  });
+});
+
+// driver management  ==================
+
 const postDriver = catchAsync(async (req, res) => {
   const result = await DashboardService.postDriver(req);
   sendResponse(res, {
@@ -67,6 +79,7 @@ const editDriver = catchAsync(async (req, res) => {
 const DashboardController = {
   totalOverview,
   revenue,
+  growth,
   postDriver,
   getDriver,
   getAllDriversOrUsers,

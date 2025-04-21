@@ -12,13 +12,12 @@ const updateProfile = async (req) => {
     ...(data.phoneNumber && { phoneNumber: data.name }),
     ...(data.name && { name: data.name }),
   };
+  const existingUser = await Admin.findById(userId).lean();
 
   if (files && files.profile_image) {
     updatedData.profile_image = files.profile_image[0].path;
     unlinkFile(existingUser.profile_image);
   }
-
-  const existingUser = await Admin.findById(userId).lean();
 
   const [auth, admin] = await Promise.all([
     Auth.findByIdAndUpdate(

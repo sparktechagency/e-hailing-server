@@ -6,6 +6,7 @@ const validateFields = require("../../../util/validateFields");
 const postNotification = require("../../../util/postNotification");
 const User = require("../user/User");
 const { default: mongoose } = require("mongoose");
+const Message = require("./Message");
 
 const postChat = async (userData, payload) => {
   const { userId } = userData;
@@ -122,10 +123,38 @@ const getAllChats = async (userData, query) => {
   };
 };
 
+const updateMessageAsSeen = async (userData, payload) => {
+  /**
+   * Updates all unread messages in a chat as seen for the logged-in user
+   * Meaning update unread messages where the logged-in user is the receiver
+   */
+  const userId = userData.userId; // logged in user who's viewing the chat
+
+  validateFields(payload, ["chatId"]);
+
+  const chat = await Chat.findById(payload.chatId).lean();
+
+  if (!chat) throw new ApiError(status.NOT_FOUND, "Chat not found");
+
+  const result = await Message.updateMany(
+    {
+      _id: { $in: chat.messages },
+      receiver: userId,
+      isRead: false,
+    },
+    {
+      $set: { isRead: true },
+    }
+  );
+
+  return result;
+};
+
 const ChatService = {
   postChat,
   getChatMessages,
   getAllChats,
+  updateMessageAsSeen,
 };
 
 module.exports = ChatService;

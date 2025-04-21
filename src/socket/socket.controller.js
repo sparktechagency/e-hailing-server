@@ -13,7 +13,11 @@ const postNotification = require("../util/postNotification");
 const emitResult = require("./emitResult");
 const OnlineSession = require("../app/module/onlineSession/OnlineSession");
 const { logger } = require("../util/logger");
+const Chat = require("../app/module/chat/Chat");
+const Message = require("../app/module/chat/Message");
+const validateFields = require("../util/validateFields");
 
+// trip socket =============================================================================================================================
 // track active timeouts for trip cancellation
 const tripTimeouts = new Map();
 
@@ -440,7 +444,64 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
   }
 });
 
-// utility functions =====================
+// chat socket =============================================================================================================================
+
+const sendMessage = socketCatchAsync(async (socket, io, payload) => {
+  try {
+    const { userId, receiverId, chatId, message } = payload;
+
+    validateFields(payload, ["receiverId", "chatId", "message"]);
+
+    const existingChat = await Chat.findOne({
+      _id: chatId,
+      participants: { $all: [userId, receiverId] },
+    });
+
+    if (!existingChat) throw new ApiError(status.BAD_REQUEST, "No chat found");
+
+    const newMessage = await Message.create({
+      sender: userId,
+      receiver: receiverId,
+      message,
+    });
+
+    // notify both user and driver upon new message
+    postNotification("New message", message, receiverId);
+    postNotification("New message", message, userId);
+
+    Promise.all([
+      Chat.updateOne({ _id: chatId }, { $push: { messages: newMessage._id } }),
+    ]);
+
+    // Broadcast to user
+    io.to(userId).emit(
+      EnumSocketEvent.SEND_MESSAGE,
+      emitResult({
+        statusCode: status.OK,
+        success: true,
+        message: "Message sent successfully",
+        data: newMessage,
+      })
+    );
+
+    // Broadcast to driver
+    io.to(receiverId).emit(
+      EnumSocketEvent.SEND_MESSAGE,
+      emitResult({
+        statusCode: status.OK,
+        success: true,
+        message: "Message sent successfully",
+        data: newMessage,
+      })
+    );
+
+    return newMessage;
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// utility functions =============================================================================================================================
 
 const handleStatusNotifications = (io, trip, newStatus) => {
   const eventName = EnumSocketEvent.TRIP_UPDATE_STATUS;
@@ -528,6 +589,7 @@ const SocketController = {
   acceptTrip,
   updateDriverLocation,
   updateTripStatus,
+  sendMessage,
 };
 
 module.exports = SocketController;
