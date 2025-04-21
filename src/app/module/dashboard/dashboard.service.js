@@ -210,7 +210,7 @@ const growth = async (query) => {
   };
 };
 
-// driver management ========================
+// driver-user management ========================
 
 const postDriver = async (req) => {
   const { body: payload, files, user } = req;
@@ -291,7 +291,7 @@ const getAllDriversOrUsers = async (query) => {
     throw new ApiError(status.BAD_REQUEST, "Invalid role");
 
   const driversQuery = new QueryBuilder(
-    User.find({ role: query.role }).lean(),
+    User.find({ role: query.role }).sort({ email: 1 }).lean(),
     query
   )
     .search(["name", "email", "phoneNumber"])
