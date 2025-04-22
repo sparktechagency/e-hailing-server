@@ -86,6 +86,16 @@ const getUserTripStats = catchAsync(async (req, res) => {
   });
 });
 
+const blockUnblockUserDriver = catchAsync(async (req, res) => {
+  const result = await DashboardService.blockUnblockUserDriver(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Block status updated successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   revenue,
@@ -95,6 +105,7 @@ const DashboardController = {
   getAllDriversOrUsers,
   editDriver,
   getUserTripStats,
+  blockUnblockUserDriver,
 };
 
 module.exports = DashboardController;

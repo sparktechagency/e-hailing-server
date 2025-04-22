@@ -44,6 +44,11 @@ router
     "/get-user-trip-stats",
     auth(config.auth_level.admin),
     DashboardController.getUserTripStats
+  )
+  .patch(
+    "/block-unblock-user-driver",
+    auth(config.auth_level.admin),
+    DashboardController.blockUnblockUserDriver
   );
 
 module.exports = router;

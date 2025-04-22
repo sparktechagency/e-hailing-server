@@ -398,6 +398,25 @@ const getUserTripStats = async (query) => {
   return stats[0] || { totalTrip: 0, statusCounts: [] };
 };
 
+const blockUnblockUserDriver = async (payload) => {
+  validateFields(payload, ["authId"]);
+
+  const { authId, isBlocked } = payload;
+
+  const user = await Auth.findByIdAndUpdate(
+    authId,
+    { $set: { isBlocked } },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("isBlocked email");
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+
+  return user;
+};
+
 const DashboardService = {
   revenue,
   totalOverview,
@@ -407,6 +426,7 @@ const DashboardService = {
   getAllDriversOrUsers,
   editDriver,
   getUserTripStats,
+  blockUnblockUserDriver,
 };
 
 module.exports = DashboardService;
