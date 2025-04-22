@@ -26,7 +26,6 @@ router
     auth(config.auth_level.admin),
     CarController.updateAssignCarToDriver
   )
-
   .delete(
     "/delete-car",
     auth(config.auth_level.admin),
