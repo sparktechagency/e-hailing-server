@@ -14,8 +14,8 @@ const totalOverview = catchAsync(async (req, res) => {
   });
 });
 
-const revenue = catchAsync(async (req, res) => {
-  const result = await DashboardService.revenue(req.query);
+const getRevenue = catchAsync(async (req, res) => {
+  const result = await DashboardService.getRevenue(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -98,7 +98,7 @@ const blockUnblockUserDriver = catchAsync(async (req, res) => {
 
 const DashboardController = {
   totalOverview,
-  revenue,
+  getRevenue,
   growth,
   postDriver,
   getDriver,

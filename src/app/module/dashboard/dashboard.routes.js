@@ -14,7 +14,11 @@ router
     auth(config.auth_level.admin),
     DashboardController.totalOverview
   )
-  .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue)
+  .get(
+    "/get-revenue",
+    auth(config.auth_level.admin),
+    DashboardController.getRevenue
+  )
   .get("/growth", auth(config.auth_level.admin), DashboardController.growth)
 
   // driver management ==================
