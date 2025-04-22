@@ -12,8 +12,11 @@ const EnumPaymentType = {
 const EnumPaymentStatus = {
   SUCCEEDED: "succeeded",
   UNPAID: "unpaid",
-  TRANSFERRED: "transferred",
-  REFUNDED: "refunded",
+};
+
+const EnumPaymentFor = {
+  TRIP: "trip",
+  COIN_PURCHASE: "coin_purchase",
 };
 
 const EnumSocketEvent = {
@@ -59,6 +62,7 @@ module.exports = {
   EnumUserRole,
   EnumPaymentType,
   EnumPaymentStatus,
+  EnumPaymentFor,
   EnumSocketEvent,
   LoginProvider,
   TripStatus,

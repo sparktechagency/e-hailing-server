@@ -1,5 +1,10 @@
 const { default: status } = require("http-status");
-const { EnumUserRole, UserAccountStatus } = require("../../../util/enum");
+const {
+  EnumUserRole,
+  UserAccountStatus,
+  EnumPaymentStatus,
+  EnumPaymentFor,
+} = require("../../../util/enum");
 const Auth = require("../auth/Auth");
 const User = require("../user/User");
 const EmailHelpers = require("../../../util/emailHelpers");
@@ -11,65 +16,111 @@ const Car = require("../car/Car");
 const Admin = require("../admin/Admin");
 const Trip = require("../trip/Trip");
 const { default: mongoose } = require("mongoose");
+const Payment = require("../payment/Payment");
 
 // overview ========================
 
-const revenue = async (query) => {
+const getRevenue = async (query) => {
   const { year: strYear } = query;
+
+  validateFields(query, ["year"]);
+
   const year = Number(strYear);
-
-  if (!year) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Missing year");
-  }
-
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
-
-  const distinctYears = await Transaction.aggregate([
+  const result = await Payment.aggregate([
     {
-      $group: {
-        _id: { $year: "$createdAt" },
-      },
-    },
-    {
-      $sort: { _id: -1 },
-    },
-    {
-      $project: {
-        year: "$_id",
-        _id: 0,
+      $facet: {
+        distinctYears: [
+          {
+            $group: {
+              _id: { $year: "$createdAt" },
+            },
+          },
+          {
+            $sort: { _id: 1 },
+          },
+          {
+            $project: {
+              year: "$_id",
+              _id: 0,
+            },
+          },
+        ],
+        monthlyRevenue: [
+          {
+            $match: {
+              createdAt: { $gte: startDate, $lt: endDate },
+              paymentFor: "coin_purchase", // ✅ make sure to filter if needed
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $project: {
+              amountForCoinPurchase: 1,
+              month: { $month: "$createdAt" },
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              totalRevenue: { $sum: "$amountForCoinPurchase" },
+            },
+          },
+          {
+            $sort: { _id: 1 },
+          },
+        ],
+        totalRevenueAllTime: [
+          {
+            $match: {
+              paymentFor: EnumPaymentFor.COIN_PURCHASE,
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$amountForCoinPurchase" },
+            },
+          },
+        ],
+        tripRevenueBreakdown: [
+          {
+            $match: {
+              paymentFor: "trip",
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $group: {
+              _id: "$paymentType", // cash / coin
+              total: {
+                $sum: {
+                  $add: [
+                    { $ifNull: ["$amountInCash", 0] },
+                    { $ifNull: ["$amountInCoins", 0] },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $sort: { total: 1 },
+          },
+        ],
       },
     },
   ]);
+
+  const {
+    distinctYears = [],
+    monthlyRevenue = [],
+    totalRevenueAllTime = [],
+    tripRevenueBreakdown = [],
+  } = result[0] || {};
 
   const totalYears = distinctYears.map((item) => item.year);
-
-  const revenue = await Subscription.aggregate([
-    {
-      $match: {
-        createdAt: {
-          $gte: startDate,
-          $lt: endDate,
-        },
-        // paymentStatus: "succeeded", // Only include successful payments
-      },
-    },
-    {
-      $project: {
-        price: 1, // Only keep the price field
-        month: { $month: "$createdAt" }, // Extract the month from createdAt
-      },
-    },
-    {
-      $group: {
-        _id: "$month", // Group by the month
-        totalRevenue: { $sum: "$price" }, // Sum up the price for each month
-      },
-    },
-    {
-      $sort: { _id: 1 }, // Sort the result by month (ascending)
-    },
-  ]);
 
   const monthNames = [
     "January",
@@ -86,19 +137,26 @@ const revenue = async (query) => {
     "December",
   ];
 
-  const monthlyRevenue = monthNames.reduce((acc, month) => {
+  const monthlyRevenueObj = monthNames.reduce((acc, month) => {
     acc[month] = 0;
     return acc;
   }, {});
 
-  revenue.forEach((r) => {
+  monthlyRevenue.forEach((r) => {
     const monthName = monthNames[r._id - 1];
-    monthlyRevenue[monthName] = r.totalRevenue;
+    monthlyRevenueObj[monthName] = r.totalRevenue;
+  });
+
+  const tripPaymentAnalysis = {};
+  tripRevenueBreakdown.forEach((item) => {
+    tripPaymentAnalysis[item._id] = item.total;
   });
 
   return {
+    totalRevenueAllTime: totalRevenueAllTime[0]?.total || 0,
+    tripPaymentAnalysis,
     total_years: totalYears,
-    monthlyRevenue,
+    monthlyRevenue: monthlyRevenueObj,
   };
 };
 
@@ -360,7 +418,9 @@ const getUserTripStats = async (query) => {
   const stats = await Trip.aggregate([
     {
       $match: {
-        user: mongoose.Types.ObjectId.createFromHexString(query.userId),
+        user: mongoose.Types.mongoose.Types.ObjectId.createFromHexString.createFromHexString(
+          query.userId
+        ),
       },
     },
     {
@@ -398,8 +458,27 @@ const getUserTripStats = async (query) => {
   return stats[0] || { totalTrip: 0, statusCounts: [] };
 };
 
+const blockUnblockUserDriver = async (payload) => {
+  validateFields(payload, ["authId"]);
+
+  const { authId, isBlocked } = payload;
+
+  const user = await Auth.findByIdAndUpdate(
+    authId,
+    { $set: { isBlocked } },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("isBlocked email");
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+
+  return user;
+};
+
 const DashboardService = {
-  revenue,
+  getRevenue,
   totalOverview,
   growth,
   postDriver,
@@ -407,6 +486,7 @@ const DashboardService = {
   getAllDriversOrUsers,
   editDriver,
   getUserTripStats,
+  blockUnblockUserDriver,
 };
 
 module.exports = DashboardService;
