@@ -96,6 +96,18 @@ const blockUnblockUserDriver = catchAsync(async (req, res) => {
   });
 });
 
+// announce management ==================
+
+const getAnnouncement = catchAsync(async (req, res) => {
+  const result = await DashboardService.getAnnouncement(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Announcement retrieved successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   getRevenue,
