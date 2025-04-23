@@ -22,9 +22,23 @@ const getAllPayments = catchAsync(async (req, res) => {
   });
 });
 
+const getDriverEarningReport = catchAsync(async (req, res) => {
+  const result = await PaymentService.getDriverEarningReport(
+    req.user,
+    req.query
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Driver earning report retrieved",
+    data: result,
+  });
+});
+
 const PaymentController = {
   getPayment,
   getAllPayments,
+  getDriverEarningReport,
 };
 
 module.exports = PaymentController;
