@@ -108,6 +108,26 @@ const getAnnouncement = catchAsync(async (req, res) => {
   });
 });
 
+const updateAnnouncement = catchAsync(async (req, res) => {
+  const result = await DashboardService.updateAnnouncement(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Announcement updated successfully",
+    data: result,
+  });
+});
+
+const updateToggleAnnouncement = catchAsync(async (req, res) => {
+  const result = await DashboardService.updateToggleAnnouncement(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Announcement toggle updated successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   getRevenue,
@@ -118,6 +138,9 @@ const DashboardController = {
   editDriver,
   getUserTripStats,
   blockUnblockUserDriver,
+  getAnnouncement,
+  updateAnnouncement,
+  updateToggleAnnouncement,
 };
 
 module.exports = DashboardController;

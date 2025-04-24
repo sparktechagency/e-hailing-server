@@ -105,4 +105,3 @@
 14. onlineSessions
 
 </details>
-0.8

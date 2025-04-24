@@ -481,7 +481,7 @@ const blockUnblockUserDriver = async (payload) => {
 // announcement management ========================
 
 const getAnnouncement = async () => {
-  const announcement = await Announcement.find({}).lean();
+  const announcement = await Announcement.findOne().lean();
   return announcement;
 };
 
@@ -503,12 +503,12 @@ const updateAnnouncement = async (payload) => {
   return announcement;
 };
 
-const updateToggleActive = async (payload) => {
+const updateToggleAnnouncement = async (payload) => {
   validateFields(payload, ["isActive"]);
 
   const announcement = await Announcement.findOneAndUpdate(
     {},
-    { isActive },
+    { isActive: payload.isActive },
     {
       new: true,
       runValidators: true,
@@ -530,7 +530,7 @@ const DashboardService = {
   blockUnblockUserDriver,
   getAnnouncement,
   updateAnnouncement,
-  updateToggleActive,
+  updateToggleAnnouncement,
 };
 
 module.exports = DashboardService;
