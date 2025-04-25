@@ -17,6 +17,7 @@ const Admin = require("../admin/Admin");
 const Trip = require("../trip/Trip");
 const { default: mongoose } = require("mongoose");
 const Payment = require("../payment/Payment");
+const Announcement = require("./Announcement");
 
 // overview ========================
 
@@ -477,6 +478,46 @@ const blockUnblockUserDriver = async (payload) => {
   return user;
 };
 
+// announcement management ========================
+
+const getAnnouncement = async () => {
+  const announcement = await Announcement.findOne().lean();
+  return announcement;
+};
+
+const updateAnnouncement = async (payload) => {
+  const updateFields = {
+    ...(payload.title && { title: payload.title }),
+    ...(payload.description && { description: payload.description }),
+  };
+
+  if (Object.keys(updateFields).length === 0)
+    throw new ApiError(status.BAD_REQUEST, "No fields to update");
+
+  const announcement = await Announcement.findOneAndUpdate({}, updateFields, {
+    new: true,
+    upsert: true,
+    runValidators: true,
+  });
+
+  return announcement;
+};
+
+const updateToggleAnnouncement = async (payload) => {
+  validateFields(payload, ["isActive"]);
+
+  const announcement = await Announcement.findOneAndUpdate(
+    {},
+    { isActive: payload.isActive },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  return announcement;
+};
+
 const DashboardService = {
   getRevenue,
   totalOverview,
@@ -487,6 +528,9 @@ const DashboardService = {
   editDriver,
   getUserTripStats,
   blockUnblockUserDriver,
+  getAnnouncement,
+  updateAnnouncement,
+  updateToggleAnnouncement,
 };
 
 module.exports = DashboardService;

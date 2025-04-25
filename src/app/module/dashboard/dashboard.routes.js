@@ -53,6 +53,19 @@ router
     "/block-unblock-user-driver",
     auth(config.auth_level.admin),
     DashboardController.blockUnblockUserDriver
+  )
+
+  // announcement management ==================
+  .get("/get-announcement", DashboardController.getAnnouncement)
+  .patch(
+    "/update-announcement",
+    auth(config.auth_level.admin),
+    DashboardController.updateAnnouncement
+  )
+  .patch(
+    "/update-toggle-announcement",
+    auth(config.auth_level.admin),
+    DashboardController.updateToggleAnnouncement
   );
 
 module.exports = router;
