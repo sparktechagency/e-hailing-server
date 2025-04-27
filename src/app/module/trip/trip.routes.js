@@ -26,6 +26,23 @@ router
     "/get-trip-statistics",
     auth(config.auth_level.driver),
     TripController.getTripStatistics
+  )
+
+  // Peak hour routes =========================
+  .get(
+    "/get-peak-hours",
+    auth(config.auth_level.user),
+    TripController.getPeakHours
+  )
+  .patch(
+    "/post-time-range",
+    auth(config.auth_level.admin),
+    TripController.postTimeRange
+  )
+  .patch(
+    "/delete-time-range",
+    auth(config.auth_level.admin),
+    TripController.deleteTimeRange
   );
 
 module.exports = router;

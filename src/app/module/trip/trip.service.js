@@ -5,6 +5,8 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const { EnumUserRole, EnumPaymentType } = require("../../../util/enum");
 const OnlineSession = require("../onlineSession/OnlineSession");
+const dateTimeValidator = require("../../../util/dateTimeValidator");
+const PeakHour = require("./PeakHour");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -187,6 +189,61 @@ const getTripStatistics = async (userData, query) => {
   };
 };
 
+// peak hours ========================
+
+const getPeakHours = async (userData, payload) => {
+  const peak = await PeakHour.findOne().lean();
+  if (!peak) throw new ApiError(status.NOT_FOUND, "No peak hours found.");
+
+  return peak;
+};
+
+const postTimeRange = async (userData, payload) => {
+  validateFields(payload, ["timeRanges", "isActive"]);
+  validateFields(payload.timeRanges, ["start", "end"]);
+  dateTimeValidator([], [payload.timeRanges.start, payload.timeRanges.end]);
+
+  const { start, end } = payload.timeRanges;
+
+  const peak = await PeakHour.findOneAndUpdate(
+    {},
+    {
+      $push: { timeRanges: { start, end } },
+    },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+    }
+  );
+
+  if (!peak) throw new ApiError(status.NOT_FOUND, "Peak hours not found");
+
+  return peak;
+};
+
+const deleteTimeRange = async (userData, payload) => {
+  validateFields(payload, ["index"]);
+  const { index } = payload; // index of the timeRange to remove
+
+  if (typeof index !== "number")
+    throw new ApiError(status.BAD_REQUEST, "Index must be a number.");
+
+  const peak = await PeakHour.findOne();
+  if (!peak) throw new ApiError(status.NOT_FOUND, "No peak hours found.");
+
+  if (index < 0 || index >= peak.timeRanges.length)
+    throw new ApiError(
+      status.BAD_REQUEST,
+      "Index out of bounds. Please provide a valid index."
+    );
+
+  peak.timeRanges.splice(index, 1);
+  await peak.save();
+
+  return peak;
+};
+
 // utility functions ==================
 const getTimeRange = (filter) => {
   const now = new Date();
@@ -233,6 +290,9 @@ const TripService = {
   deleteTrip,
   updateTollFee,
   getTripStatistics,
+  getPeakHours,
+  postTimeRange,
+  deleteTimeRange,
 };
 
 module.exports = TripService;

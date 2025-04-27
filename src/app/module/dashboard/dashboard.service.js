@@ -352,7 +352,14 @@ const getAllDriversOrUsers = async (query) => {
     throw new ApiError(status.BAD_REQUEST, "Invalid role");
 
   const driversQuery = new QueryBuilder(
-    User.find({ role: query.role }).sort({ email: 1 }).lean(),
+    User.find({ role: query.role })
+      .populate([
+        {
+          path: "authId",
+        },
+      ])
+      .sort({ email: 1 })
+      .lean(),
     query
   )
     .search(["name", "email", "phoneNumber"])
