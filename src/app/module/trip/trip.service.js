@@ -7,6 +7,7 @@ const { EnumUserRole, EnumPaymentType } = require("../../../util/enum");
 const OnlineSession = require("../onlineSession/OnlineSession");
 const dateTimeValidator = require("../../../util/dateTimeValidator");
 const PeakHour = require("./PeakHour");
+const isPeakHour = require("../../../util/isPeakHour");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -194,7 +195,6 @@ const getTripStatistics = async (userData, query) => {
 const getPeakHours = async (userData, payload) => {
   const peak = await PeakHour.findOne().lean();
   if (!peak) throw new ApiError(status.NOT_FOUND, "No peak hours found.");
-
   return peak;
 };
 

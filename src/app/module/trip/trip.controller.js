@@ -68,7 +68,7 @@ const postTimeRange = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Peak hour created",
+    message: "Time range created",
     data: result,
   });
 });
@@ -78,7 +78,7 @@ const deleteTimeRange = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Peak hour deleted",
+    message: "Time range deleted",
     data: result,
   });
 });
