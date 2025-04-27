@@ -83,6 +83,16 @@ const deleteTimeRange = catchAsync(async (req, res) => {
   });
 });
 
+const updateTogglePeakHours = catchAsync(async (req, res) => {
+  const result = await TripService.updateTogglePeakHours(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Peak hour updated",
+    data: result,
+  });
+});
+
 const TripController = {
   getTrip,
   getAllTrips,
@@ -92,6 +102,7 @@ const TripController = {
   getPeakHours,
   postTimeRange,
   deleteTimeRange,
+  updateTogglePeakHours,
 };
 
 module.exports = TripController;

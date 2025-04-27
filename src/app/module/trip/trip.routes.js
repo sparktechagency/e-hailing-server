@@ -43,6 +43,11 @@ router
     "/delete-time-range",
     auth(config.auth_level.admin),
     TripController.deleteTimeRange
+  )
+  .patch(
+    "/update-toggle-peak-hours",
+    auth(config.auth_level.admin),
+    TripController.updateTogglePeakHours
   );
 
 module.exports = router;

@@ -244,6 +244,25 @@ const deleteTimeRange = async (userData, payload) => {
   return peak;
 };
 
+const updateTogglePeakHours = async (userData, payload) => {
+  validateFields(payload, ["isActive"]);
+
+  const peak = await PeakHour.findOneAndUpdate(
+    {},
+    {
+      isActive: payload.isActive,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!peak) throw new ApiError(status.NOT_FOUND, "Peak hours not found");
+
+  return peak;
+};
+
 // utility functions ==================
 const getTimeRange = (filter) => {
   const now = new Date();
@@ -293,6 +312,7 @@ const TripService = {
   getPeakHours,
   postTimeRange,
   deleteTimeRange,
+  updateTogglePeakHours,
 };
 
 module.exports = TripService;
