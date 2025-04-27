@@ -52,12 +52,57 @@ const getTripStatistics = catchAsync(async (req, res) => {
   });
 });
 
+// Peak hour =========================
+const getPeakHours = catchAsync(async (req, res) => {
+  const result = await TripService.getPeakHours();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Peak hours retrieved",
+    data: result,
+  });
+});
+
+const postTimeRange = catchAsync(async (req, res) => {
+  const result = await TripService.postTimeRange(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Peak hour created",
+    data: result,
+  });
+});
+
+const deleteTimeRange = catchAsync(async (req, res) => {
+  const result = await TripService.deleteTimeRange(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Peak hour deleted",
+    data: result,
+  });
+});
+
+const updateTogglePeakHours = catchAsync(async (req, res) => {
+  const result = await TripService.updateTogglePeakHours(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Peak hour updated",
+    data: result,
+  });
+});
+
 const TripController = {
   getTrip,
   getAllTrips,
   deleteTrip,
   updateTollFee,
   getTripStatistics,
+  getPeakHours,
+  postTimeRange,
+  deleteTimeRange,
+  updateTogglePeakHours,
 };
 
 module.exports = TripController;
