@@ -36,6 +36,16 @@ const growth = catchAsync(async (req, res) => {
 
 // driver management  ==================
 
+const getUser = catchAsync(async (req, res) => {
+  const result = await DashboardService.getUser(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User retrieved successfully",
+    data: result,
+  });
+});
+
 const postDriver = catchAsync(async (req, res) => {
   const result = await DashboardService.postDriver(req);
   sendResponse(res, {
@@ -47,7 +57,7 @@ const postDriver = catchAsync(async (req, res) => {
 });
 
 const getDriver = catchAsync(async (req, res) => {
-  const result = await DashboardService.getDriver(req.user);
+  const result = await DashboardService.getDriver(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -132,12 +142,15 @@ const DashboardController = {
   totalOverview,
   getRevenue,
   growth,
+
+  getUser,
   postDriver,
   getDriver,
   getAllDriversOrUsers,
   editDriver,
   getUserTripStats,
   blockUnblockUserDriver,
+
   getAnnouncement,
   updateAnnouncement,
   updateToggleAnnouncement,
