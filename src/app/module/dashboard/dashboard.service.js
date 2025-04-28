@@ -433,9 +433,7 @@ const getUserTripStats = async (query) => {
   const stats = await Trip.aggregate([
     {
       $match: {
-        user: mongoose.Types.mongoose.Types.ObjectId.createFromHexString.createFromHexString(
-          query.userId
-        ),
+        user: mongoose.Types.ObjectId.createFromHexString(query.userId),
       },
     },
     {
