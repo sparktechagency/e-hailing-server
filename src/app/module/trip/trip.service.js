@@ -3,12 +3,17 @@ const Trip = require("./Trip");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
-const { EnumUserRole, EnumPaymentType } = require("../../../util/enum");
+const {
+  EnumUserRole,
+  EnumPaymentType,
+  TripStatus,
+} = require("../../../util/enum");
 const OnlineSession = require("../onlineSession/OnlineSession");
 const dateTimeValidator = require("../../../util/dateTimeValidator");
 const PeakHour = require("./PeakHour");
 const isPeakHour = require("../../../util/isPeakHour");
 const getTimeRange = require("../../../util/getTimeRage");
+const { default: mongoose } = require("mongoose");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -109,14 +114,16 @@ const updateTollFee = async (userData, payload) => {
 };
 
 const getTripStatistics = async (userData, query) => {
-  const activeHours = "";
-
   const { filter = "all-time" } = query;
   const dateFilter = getTimeRange(filter.toLowerCase().trim());
 
+  if (userData.role === EnumUserRole.ADMIN) validateFields(query, ["userId"]);
+
   const matchStage = {
-    // status: TripStatus.COMPLETED,
-    // ...(userData.role !== EnumUserRole.ADMIN && { driver: userData.userId }),
+    status: TripStatus.COMPLETED,
+    driver: mongoose.Types.ObjectId.createFromHexString(
+      userData.role === EnumUserRole.ADMIN ? query.userId : userData.userId
+    ),
   };
 
   if (Object.keys(dateFilter).length > 0)
