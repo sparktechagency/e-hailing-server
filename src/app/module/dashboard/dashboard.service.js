@@ -273,6 +273,13 @@ const growth = async (query) => {
 
 // driver-user management ========================
 
+const getUser = async (query) => {
+  validateFields(query, ["userId"]);
+  const user = await User.findById(query.userId).populate("authId").lean();
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+  return user;
+};
+
 const postDriver = async (req) => {
   const { body: payload, files, user } = req;
 
@@ -529,12 +536,15 @@ const DashboardService = {
   getRevenue,
   totalOverview,
   growth,
+
+  getUser,
   postDriver,
   getDriver,
   getAllDriversOrUsers,
   editDriver,
   getUserTripStats,
   blockUnblockUserDriver,
+
   getAnnouncement,
   updateAnnouncement,
   updateToggleAnnouncement,

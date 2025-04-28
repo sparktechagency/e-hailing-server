@@ -21,7 +21,8 @@ router
   )
   .get("/growth", auth(config.auth_level.admin), DashboardController.growth)
 
-  // driver management ==================
+  // driver-user management ==================
+  .get("/get-user", auth(config.auth_level.admin), DashboardController.getUser)
   .post(
     "/post-driver",
     auth(config.auth_level.admin),
