@@ -18,6 +18,7 @@ const Trip = require("../trip/Trip");
 const { default: mongoose } = require("mongoose");
 const Payment = require("../payment/Payment");
 const Announcement = require("./Announcement");
+const Fare = require("../trip/Fare");
 
 // overview ========================
 
@@ -530,6 +531,25 @@ const updateToggleAnnouncement = async (payload) => {
   return announcement;
 };
 
+// fare management ========================
+
+const updateFare = async (payload) => {
+  const updateFields = {
+    ...(payload.baseFare && { baseFare: payload.baseFare }),
+    ...(payload.farePerKm && { farePerKm: payload.farePerKm }),
+    ...(payload.farePerMin && { farePerMin: payload.farePerMin }),
+    ...(payload.minFare && { minFare: payload.minFare }),
+  };
+
+  const fare = await Fare.findOneAndUpdate({}, updateFields, {
+    new: true,
+    upsert: true,
+    runValidators: true,
+  });
+
+  return fare;
+};
+
 const DashboardService = {
   getRevenue,
   totalOverview,
@@ -546,6 +566,8 @@ const DashboardService = {
   getAnnouncement,
   updateAnnouncement,
   updateToggleAnnouncement,
+
+  updateFare,
 };
 
 module.exports = DashboardService;

@@ -67,6 +67,12 @@ router
     "/update-toggle-announcement",
     auth(config.auth_level.admin),
     DashboardController.updateToggleAnnouncement
+  )
+  // announcement management ==================
+  .patch(
+    "/update-fare",
+    auth(config.auth_level.admin),
+    DashboardController.updateFare
   );
 
 module.exports = router;
