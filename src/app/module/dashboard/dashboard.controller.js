@@ -138,6 +138,17 @@ const updateToggleAnnouncement = catchAsync(async (req, res) => {
   });
 });
 
+// fare management ==================
+const updateFare = catchAsync(async (req, res) => {
+  const result = await DashboardService.updateFare(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Fare updated successfully",
+    data: result,
+  });
+});
+
 const DashboardController = {
   totalOverview,
   getRevenue,
@@ -154,6 +165,8 @@ const DashboardController = {
   getAnnouncement,
   updateAnnouncement,
   updateToggleAnnouncement,
+
+  updateFare,
 };
 
 module.exports = DashboardController;

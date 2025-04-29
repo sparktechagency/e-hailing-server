@@ -112,7 +112,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
     },
     duration: Math.ceil(Number(payload.duration)),
     distance: Math.ceil(Number(payload.distance)) / 1000,
-    estimatedFare: fareCalculator(payload.duration, payload.distance),
+    estimatedFare: await fareCalculator(payload.duration, payload.distance),
   };
 
   const trip = await Trip.create(tripData);
@@ -401,7 +401,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           duration,
           distance,
           tripCompletedAt: Date.now(),
-          finalFare: fareCalculator(duration, distance),
+          finalFare: await fareCalculator(duration, distance),
         }),
       };
 
