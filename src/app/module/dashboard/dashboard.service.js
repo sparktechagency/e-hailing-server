@@ -346,7 +346,7 @@ const getDriver = async (query) => {
   validateFields(query, ["driverId"]);
 
   const driver = await User.findById(query.driverId)
-    .populate("assignedCar")
+    .populate("authId assignedCar")
     .lean();
   if (!driver) throw new ApiError(status.NOT_FOUND, "Driver not found");
 
