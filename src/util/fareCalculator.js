@@ -1,8 +1,12 @@
-const fareCalculator = (duration, distance) => {
-  const baseFare = 3;
-  const farePerKm = 0.34;
-  const farePerMin = 0.58;
-  const minFare = 6.5;
+const Fare = require("../app/module/trip/Fare");
+
+const fareCalculator = async (duration, distance) => {
+  const fareData = await Fare.findOne({}).lean();
+
+  const baseFare = fareData.baseFare;
+  const farePerKm = fareData.baseFare;
+  const farePerMin = fareData.baseFare;
+  const minFare = fareData.baseFare;
 
   const totalFare =
     baseFare +
