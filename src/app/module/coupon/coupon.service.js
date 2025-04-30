@@ -65,7 +65,15 @@ const getAllCoupons = async (userData, query) => {
 };
 
 const getSearchCoupon = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, ["coupon"]);
+  const { coupon } = payload;
+
+  const existingCoupon = await Coupon.findOne({ coupon });
+
+  if (!existingCoupon)
+    throw new ApiError(httpStatus.NOT_FOUND, "No coupons found");
+
+  return existingCoupon;
 };
 
 const deleteCoupon = async (userData, payload) => {
