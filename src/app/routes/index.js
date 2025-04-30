@@ -14,6 +14,7 @@ const TripRoutes = require("../module/trip/trip.routes");
 const SavedLocationRoutes = require("../module/savedLocation/savedLocation.routes");
 const ChatRoutes = require("../module/chat/chat.routes");
 const PaymentRoutes = require("../module/payment/payment.routes");
+const CouponRoutes = require("../module/coupon/coupon.routes");
 
 const moduleRoutes = [
   {
@@ -71,6 +72,10 @@ const moduleRoutes = [
   {
     path: "/payment",
     route: PaymentRoutes,
+  },
+  {
+    path: "/coupon",
+    route: CouponRoutes,
   },
 ];
 
