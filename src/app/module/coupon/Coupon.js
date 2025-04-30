@@ -2,10 +2,6 @@ const { Schema, model } = require("mongoose");
 
 const couponSchema = new Schema(
   {
-    name: {
-      type: String,
-      default: "Subscription",
-    },
     coupon: {
       type: String,
       required: true,
