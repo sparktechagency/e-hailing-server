@@ -1,3 +1,4 @@
+const cron = require("node-cron");
 const { default: status } = require("http-status");
 const Coupon = require("./Coupon");
 const QueryBuilder = require("../../../builder/queryBuilder");
@@ -86,6 +87,27 @@ const deleteCoupon = async (userData, payload) => {
 
   return coupon;
 };
+
+// delete expired coupons every hour ==>
+cron.schedule("0 * * * *", async () => {
+  try {
+    const now = new Date();
+    const result = await Coupon.updateMany(
+      {
+        endDateTime: { $lte: now },
+        isExpired: false,
+      },
+      {
+        $set: { isExpired: true },
+      }
+    );
+    if (result.modifiedCount > 0) {
+      logger.info(`Updated status of ${result.modifiedCount} expired coupons`);
+    }
+  } catch (error) {
+    logger.error("Error Updated status of expired coupon:", error);
+  }
+});
 
 const CouponService = {
   postCoupon,
