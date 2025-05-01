@@ -224,6 +224,7 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         { _id: tripId, status: TripStatus.REQUESTED },
         {
           $set: {
+            driverTripAcceptedAt: Date.now(),
             status: TripStatus.ACCEPTED,
             driver: driverId,
             driverCoordinates: {
@@ -393,6 +394,9 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
     await session.withTransaction(async () => {
       const updateData = {
         status: newStatus,
+        ...(newStatus === TripStatus.ARRIVED && {
+          driverArrivedAt: Date.now(),
+        }),
         ...(newStatus === TripStatus.STARTED && { tripStartedAt: Date.now() }),
         ...(newStatus === TripStatus.CANCELLED && {
           cancellationReason: reason,
