@@ -30,10 +30,12 @@ const fareCalculator = async (duration, distance, couponName = null) => {
     isPeakHour(),
   ]);
 
-  const baseFare = fareData.baseFare;
-  const farePerKm = fareData.farePerKm;
-  const farePerMin = fareData.farePerMin;
-  const minFare = fareData.minFare;
+  const { baseFare, farePerKm, farePerMin, minFare } = fareData || {
+    baseFare: 0,
+    farePerKm: 0,
+    farePerMin: 0,
+    minFare: 0,
+  };
 
   const distanceInKm = Math.ceil(Number(distance) / 1000);
   const durationInMin = Math.ceil(Number(duration));
