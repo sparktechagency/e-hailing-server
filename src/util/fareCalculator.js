@@ -55,11 +55,7 @@ const fareCalculator = async (duration, distance, couponName = null) => {
 const applyCoupon = (fare, coupon) => {
   const now = new Date();
 
-  if (
-    coupon.isExpired ||
-    now < coupon.startDateTime ||
-    now > coupon.endDateTime
-  ) {
+  if (coupon.isExpired || now > coupon.endDateTime) {
     throw new Error("Coupon is invalid or expired");
   }
 
