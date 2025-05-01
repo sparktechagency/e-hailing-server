@@ -1,10 +1,33 @@
 const Coupon = require("../app/module/coupon/Coupon");
 const Fare = require("../app/module/trip/Fare");
+const isPeakHour = require("./isPeakHour");
 
+/**
+ * Calculates the fare for a ride based on duration, distance, and optional coupon
+ * @async
+ * @param {number} duration - The duration of the ride in seconds
+ * @param {number} distance - The distance of the ride in meters
+ * @param {string} [couponName=null] - Optional coupon code to apply discount
+ * @returns {Promise<number>} The calculated final fare amount
+ *
+ * @description
+ * Calculates ride fare using:
+ * - Base fare
+ * - Per kilometer rate
+ * - Per minute rate
+ * - Minimum fare threshold
+ * - Peak hour multiplier (2x during peak hours)
+ * - Coupon discount if applicable
+ *
+ * The calculation first converts distance to kilometers and duration to minutes,
+ * applies the base rates, ensures minimum fare, checks for peak hours,
+ * and finally applies any valid coupon discount.
+ */
 const fareCalculator = async (duration, distance, couponName = null) => {
-  const [coupon, fareData] = await Promise.all([
+  const [coupon, fareData, peakHour] = await Promise.all([
     couponName ? Coupon.findOne({ coupon: couponName }).lean() : null,
     Fare.findOne({}).lean(),
+    isPeakHour(),
   ]);
 
   const baseFare = fareData.baseFare;
@@ -19,6 +42,8 @@ const fareCalculator = async (duration, distance, couponName = null) => {
   );
 
   if (finalFare < minFare) finalFare = minFare;
+
+  if (peakHour) finalFare = finalFare * 2;
 
   if (coupon) finalFare = applyCoupon(finalFare, coupon);
 
@@ -37,7 +62,8 @@ const applyCoupon = (fare, coupon) => {
   }
 
   const discountedFare = Math.ceil(fare - (fare * coupon.percentage) / 100);
-  return discountedFare < 0 ? 0 : discountedFare;
+  const finalDiscountedFare = discountedFare < 0 ? 0 : discountedFare;
+  return finalDiscountedFare;
 };
 
 module.exports = fareCalculator;
