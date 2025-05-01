@@ -78,12 +78,22 @@ const tripSchema = new Schema(
     finalFareInCoins: {
       type: Number,
     },
+
+    driverTripAcceptedAt: {
+      // for calculating late cancellation fee
+      type: Date,
+    },
+    driverArrivedAt: {
+      // for calculating driver waiting fee
+      type: Date,
+    },
     tripStartedAt: {
       type: Date,
     },
     tripCompletedAt: {
       type: Date,
     },
+
     cancellationReason: {
       type: [String],
     },
