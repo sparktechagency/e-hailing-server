@@ -5,6 +5,7 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const dateTimeValidator = require("../../../util/dateTimeValidator");
+const { logger } = require("../../../util/logger");
 
 const postCoupon = async (userData, payload) => {
   validateFields(payload, [
@@ -92,6 +93,7 @@ const deleteCoupon = async (userData, payload) => {
 cron.schedule("0 * * * *", async () => {
   try {
     const now = new Date();
+
     const result = await Coupon.updateMany(
       {
         endDateTime: { $lte: now },
@@ -101,9 +103,9 @@ cron.schedule("0 * * * *", async () => {
         $set: { isExpired: true },
       }
     );
-    if (result.modifiedCount > 0) {
+
+    if (result.modifiedCount > 0)
       logger.info(`Updated status of ${result.modifiedCount} expired coupons`);
-    }
   } catch (error) {
     logger.error("Error Updated status of expired coupon:", error);
   }
