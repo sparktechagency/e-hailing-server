@@ -72,6 +72,10 @@ const tripSchema = new Schema(
       type: Number,
       default: 0,
     },
+    extraCharge: {
+      type: Number,
+      default: 0,
+    },
     finalFare: {
       type: Number,
     },
