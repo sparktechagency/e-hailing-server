@@ -53,6 +53,11 @@ const TripStatus = {
   CANCELLED: "cancelled",
 };
 
+const EnumTripExtraChargeType = {
+  LATE_CANCELLATION: "late_cancellation",
+  DRIVER_WAITING: "driver_waiting",
+};
+
 const UserAccountStatus = {
   VERIFIED: "verified",
   UNVERIFIED: "unverified",
@@ -66,5 +71,6 @@ module.exports = {
   EnumSocketEvent,
   LoginProvider,
   TripStatus,
+  EnumTripExtraChargeType,
   UserAccountStatus,
 };

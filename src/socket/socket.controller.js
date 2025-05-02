@@ -8,7 +8,12 @@ const socketCatchAsync = require("../util/socketCatchAsync");
 const validateSocketFields = require("../util/socketValidateFields");
 const fareCalculator = require("../util/fareCalculator");
 const Trip = require("../app/module/trip/Trip");
-const { EnumSocketEvent, EnumUserRole, TripStatus } = require("../util/enum");
+const {
+  EnumSocketEvent,
+  EnumUserRole,
+  TripStatus,
+  EnumTripExtraChargeType,
+} = require("../util/enum");
 const postNotification = require("../util/postNotification");
 const emitResult = require("./emitResult");
 const OnlineSession = require("../app/module/onlineSession/OnlineSession");
@@ -122,6 +127,8 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
       select: "name phoneNumber profile_image",
     },
   ]);
+
+  console.log("trip===================>", trip);
 
   socket.emit(
     EnumSocketEvent.TRIP_REQUESTED,
@@ -362,50 +369,121 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
-  const { tripId, newStatus, duration, distance, reason, activeDrivers } =
-    payload || {};
+  /**
+   * Updates the status of a trip and handles associated logic based on the new status.
+   *
+   * @param {Object} socket - The socket connection object
+   * @param {Object} io - The Socket.IO server instance
+   * @param {Object} payload - The payload containing trip update information
+   * @param {string} payload.tripId - The ID of the trip to update
+   * @param {string} payload.newStatus - The new status to set for the trip
+   * @param {number} [payload.duration] - Trip duration (required for COMPLETED status)
+   * @param {number} [payload.distance] - Trip distance (required for COMPLETED status)
+   * @param {string} [payload.reason] - Cancellation reason (required for CANCELLED status)
+   * @param {Map} [payload.activeDrivers] - Map of active drivers and their socket connections
+   *
+   * @throws {SocketError} When required fields are missing or status is invalid
+   *
+   * @description
+   * Handles various trip status updates including:
+   * - Driver arrival
+   * - Trip start
+   * - Trip completion
+   * - Trip cancellation
+   * Calculates extra charges for late cancellations and driver waiting time
+   * Updates driver availability after trip completion or cancellation
+   * Manages MongoDB transactions for data consistency
+   * Sends notifications for status changes
+   *
+   * @async
+   * @function updateTripStatus
+   */
+
+  const {
+    userId,
+    tripId,
+    newStatus,
+    duration,
+    distance,
+    reason,
+    activeDrivers,
+  } = payload || {};
 
   validateSocketFields(socket, payload, ["tripId", "newStatus"]);
-
-  const allowedNewStatus = [
-    TripStatus.ON_THE_WAY,
-    TripStatus.ARRIVED,
-    TripStatus.PICKED_UP,
-    TripStatus.STARTED,
-    TripStatus.COMPLETED,
-    TripStatus.CANCELLED,
-  ];
-
-  if (!allowedNewStatus.includes(newStatus))
-    emitError(
-      socket,
-      status.BAD_REQUEST,
-      `Invalid status. Valid status are ${allowedNewStatus.join(", ")}`
-    );
-
-  if (newStatus === TripStatus.COMPLETED)
-    validateSocketFields(socket, payload, ["duration", "distance"]);
-
-  if (newStatus === TripStatus.CANCELLED)
-    validateSocketFields(socket, payload, ["reason"]);
+  validateTripStatusPayload(newStatus, payload, socket);
 
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
+      const now = new Date();
+
+      const [trip, user] = await Promise.all([
+        Trip.findById(tripId).session(session),
+        User.findById(userId).session(session),
+      ]);
+
+      if (!trip) return emitError(socket, status.NOT_FOUND, "Trip not found");
+
+      // prevent updating trip status if trip is already cancelled
+      // to ensure accurate extra charge calculations
+      if (
+        trip.status === TripStatus.CANCELLED &&
+        newStatus === TripStatus.CANCELLED
+      ) {
+        return emitError(socket, status.BAD_REQUEST, "Trip already cancelled");
+      }
+
+      // prevent updating trip status if trip is already picked up
+      // to ensure accurate extra charge calculations
+      if (
+        trip.status === TripStatus.PICKED_UP &&
+        newStatus === TripStatus.PICKED_UP
+      ) {
+        return emitError(socket, status.BAD_REQUEST, "Trip already picked up");
+      }
+
+      let extraCharge = 0;
+
+      // Calculate late cancellation fee if trip is cancelled by user (between ON_THE_WAY and CANCELLED status)
+      if (
+        user.role === EnumUserRole.USER &&
+        newStatus === TripStatus.CANCELLED &&
+        trip.driverTripAcceptedAt &&
+        trip.status === TripStatus.ON_THE_WAY
+      ) {
+        extraCharge = calculateExtraCharge(
+          EnumTripExtraChargeType.LATE_CANCELLATION,
+          trip.driverTripAcceptedAt
+        );
+      }
+
+      // Calculate waiting fee if driver has been waiting at pickup location (between ARRIVED and PICKED_UP status)
+      if (
+        user.role === EnumUserRole.DRIVER &&
+        newStatus === TripStatus.PICKED_UP &&
+        trip.driverArrivedAt &&
+        trip.status === TripStatus.ARRIVED
+      ) {
+        extraCharge = calculateExtraCharge(
+          EnumTripExtraChargeType.DRIVER_WAITING,
+          trip.driverArrivedAt
+        );
+      }
+
       const updateData = {
         status: newStatus,
-        ...(newStatus === TripStatus.ARRIVED && {
-          driverArrivedAt: Date.now(),
-        }),
-        ...(newStatus === TripStatus.STARTED && { tripStartedAt: Date.now() }),
+        ...(newStatus === TripStatus.ARRIVED && { driverArrivedAt: now }),
+        ...(newStatus === TripStatus.PICKED_UP && { extraCharge }),
+        ...(newStatus === TripStatus.STARTED && { tripStartedAt: now }),
         ...(newStatus === TripStatus.CANCELLED && {
           cancellationReason: reason,
+          extraCharge,
         }),
         ...(newStatus === TripStatus.COMPLETED && {
           duration,
           distance,
-          tripCompletedAt: Date.now(),
-          finalFare: await fareCalculator(duration, distance),
+          tripCompletedAt: now,
+          finalFare: (await fareCalculator(duration, distance)) + extraCharge,
         }),
       };
 
@@ -415,30 +493,18 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         session,
       });
 
-      // Notify relevant parties
-      if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
+      console.log(updatedTrip);
 
       handleStatusNotifications(io, updatedTrip, newStatus);
 
-      // Update driver availability for trip completion and cancellation
-      if (
-        [TripStatus.COMPLETED, TripStatus.CANCELLED].includes(newStatus) &&
-        updatedTrip.driver
-      ) {
-        const updateData = {
-          isAvailable: true,
-          ...(newStatus === TripStatus.CANCELLED && {
-            cancellationReason: reason,
-          }),
-        };
-
-        await User.findByIdAndUpdate(updatedTrip.driver, updateData, {
-          new: true,
-          runValidators: true,
-          session,
-        });
-
-        activeDrivers.set(updatedTrip.driver.toString(), socket);
+      // Update driver availability after trip completion and cancellation
+      if ([TripStatus.COMPLETED, TripStatus.CANCELLED].includes(newStatus)) {
+        await updateDriverAvailability(
+          updatedTrip,
+          socket,
+          activeDrivers,
+          session
+        );
       }
     });
   } catch (error) {
@@ -581,6 +647,66 @@ const removeStaleOnlineSessions = async () => {
   } catch (error) {
     logger.error("⌚ Error removing OnlineSessions", error);
   }
+};
+
+const calculateExtraCharge = (type, referenceTime) => {
+  const minutesElapsed = (Date.now() - new Date(referenceTime)) / 60000;
+  let extraCharge = 0;
+
+  if (
+    type === EnumTripExtraChargeType.LATE_CANCELLATION ||
+    type === EnumTripExtraChargeType.DRIVER_WAITING
+  ) {
+    if (minutesElapsed >= 10) extraCharge = 10;
+    else if (minutesElapsed >= 5) extraCharge = 5;
+  }
+
+  return extraCharge;
+};
+
+const validateTripStatusPayload = (status, payload, socket) => {
+  const allowedNewStatus = [
+    TripStatus.ON_THE_WAY,
+    TripStatus.ARRIVED,
+    TripStatus.PICKED_UP,
+    TripStatus.STARTED,
+    TripStatus.COMPLETED,
+    TripStatus.CANCELLED,
+  ];
+
+  if (!allowedNewStatus.includes(status))
+    emitError(
+      socket,
+      status.BAD_REQUEST,
+      `Invalid status. Valid status are ${allowedNewStatus.join(", ")}`
+    );
+
+  if (status === TripStatus.COMPLETED)
+    validateSocketFields(socket, payload, ["duration", "distance"]);
+
+  if (status === TripStatus.CANCELLED)
+    validateSocketFields(socket, payload, ["reason"]);
+};
+
+const updateDriverAvailability = async (
+  trip,
+  socket,
+  activeDrivers,
+  session
+) => {
+  await User.findByIdAndUpdate(
+    trip.driver,
+    {
+      isAvailable: true,
+    },
+    {
+      new: true,
+      runValidators: true,
+      session,
+    }
+  );
+
+  activeDrivers.set(trip.driver.toString(), socket);
 };
 
 // Schedule a cron job to run every Sunday at midnight for removing OnlineSessions without a duration field
