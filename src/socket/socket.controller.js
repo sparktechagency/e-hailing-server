@@ -396,7 +396,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
    * - Trip start
    * - Trip completion
    * - Trip cancellation
-   * Calculates extra charges for late cancellations and driver waiting time
+   * Calculates extra charges for late cancellations and driver waiting time and toll fees.
    * Updates driver availability after trip completion or cancellation
    * Manages MongoDB transactions for data consistency
    * Sends notifications for status changes
@@ -490,7 +490,9 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           distance,
           tripCompletedAt: now,
           finalFare:
-            (await fareCalculator(socket, duration, distance)) + extraCharge,
+            (await fareCalculator(socket, duration, distance)) +
+            trip.tollFee +
+            extraCharge,
         }),
       };
 
