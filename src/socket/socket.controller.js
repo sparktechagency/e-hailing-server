@@ -21,6 +21,7 @@ const { logger } = require("../util/logger");
 const Chat = require("../app/module/chat/Chat");
 const Message = require("../app/module/chat/Message");
 const validateFields = require("../util/validateFields");
+const isPeakHour = require("../util/isPeakHour");
 
 // trip socket =============================================================================================================================
 // track active timeouts for trip cancellation
@@ -117,7 +118,14 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
     },
     duration: Math.ceil(Number(payload.duration)),
     distance: Math.ceil(Number(payload.distance)) / 1000,
-    estimatedFare: await fareCalculator(payload.duration, payload.distance),
+    estimatedFare: await fareCalculator(
+      socket,
+      payload.duration,
+      payload.distance,
+      payload.coupon
+    ),
+    isPeakHourApplied: await isPeakHour(),
+    isCouponApplied: payload.coupon ? true : false,
   };
 
   const trip = await Trip.create(tripData);
@@ -127,8 +135,6 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
       select: "name phoneNumber profile_image",
     },
   ]);
-
-  console.log("trip===================>", trip);
 
   socket.emit(
     EnumSocketEvent.TRIP_REQUESTED,
@@ -483,7 +489,8 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           duration,
           distance,
           tripCompletedAt: now,
-          finalFare: (await fareCalculator(duration, distance)) + extraCharge,
+          finalFare:
+            (await fareCalculator(socket, duration, distance)) + extraCharge,
         }),
       };
 

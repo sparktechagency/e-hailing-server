@@ -82,6 +82,14 @@ const tripSchema = new Schema(
     finalFareInCoins: {
       type: Number,
     },
+    isPeakHourApplied: {
+      type: Boolean,
+      default: false,
+    },
+    isCouponApplied: {
+      type: Boolean,
+      default: false,
+    },
 
     driverTripAcceptedAt: {
       // for calculating late cancellation fee

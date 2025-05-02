@@ -1,5 +1,7 @@
+const { default: status } = require("http-status");
 const Coupon = require("../app/module/coupon/Coupon");
 const Fare = require("../app/module/trip/Fare");
+const emitError = require("../socket/emitError");
 const isPeakHour = require("./isPeakHour");
 
 /**
@@ -23,12 +25,20 @@ const isPeakHour = require("./isPeakHour");
  * applies the base rates, ensures minimum fare, checks for peak hours,
  * and finally applies any valid coupon discount.
  */
-const fareCalculator = async (duration, distance, couponName = null) => {
+const fareCalculator = async (
+  socket,
+  duration,
+  distance,
+  couponName = null
+) => {
   const [coupon, fareData, peakHour] = await Promise.all([
     couponName ? Coupon.findOne({ coupon: couponName }).lean() : null,
     Fare.findOne({}).lean(),
     isPeakHour(),
   ]);
+
+  if (couponName && !coupon)
+    emitError(socket, status.NOT_FOUND, "Coupon not found");
 
   const { baseFare, farePerKm, farePerMin, minFare } = fareData || {
     baseFare: 0,
@@ -47,17 +57,16 @@ const fareCalculator = async (duration, distance, couponName = null) => {
 
   if (peakHour) finalFare = finalFare * 2;
 
-  if (coupon) finalFare = applyCoupon(finalFare, coupon);
+  if (coupon) finalFare = applyCoupon(socket, finalFare, coupon);
 
   return finalFare;
 };
 
-const applyCoupon = (fare, coupon) => {
+const applyCoupon = (socket, fare, coupon) => {
   const now = new Date();
 
-  if (coupon.isExpired || now > coupon.endDateTime) {
-    throw new Error("Coupon is invalid or expired");
-  }
+  if (coupon.isExpired || now > coupon.endDateTime)
+    emitError(socket, status.BAD_REQUEST, "Coupon is invalid or expired");
 
   const discountedFare = Math.ceil(fare - (fare * coupon.percentage) / 100);
   const finalDiscountedFare = discountedFare < 0 ? 0 : discountedFare;
