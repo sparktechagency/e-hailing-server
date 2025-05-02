@@ -102,6 +102,11 @@ const UserSchema = new Schema(
       type: Number,
       min: 0,
     },
+    outstandingFee: {
+      type: Number,
+      default: 0,
+      min: [0, "outstanding fee cannot be negative"],
+    },
   },
   {
     timestamps: true,
