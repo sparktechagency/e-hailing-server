@@ -430,34 +430,21 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
 
       if (!trip) return emitError(socket, status.NOT_FOUND, "Trip not found");
 
-      // prevent updating trip status if trip is already cancelled
-      // to ensure accurate extra charge calculations
-      if (
-        trip.status === TripStatus.CANCELLED &&
-        newStatus === TripStatus.CANCELLED
-      ) {
-        return emitError(socket, status.BAD_REQUEST, "Trip already cancelled");
-      }
+      const tripUser = await User.findById(trip.user).lean().session(session);
 
-      // prevent updating trip status if trip is already picked up
-      // to ensure accurate extra charge calculations
-      if (
-        trip.status === TripStatus.PICKED_UP &&
-        newStatus === TripStatus.PICKED_UP
-      ) {
-        return emitError(socket, status.BAD_REQUEST, "Trip already picked up");
-      }
+      // prevent duplicate status updates to ensure accurate extra charge calculations
+      const duplicateStatusChecks = {
+        [TripStatus.CANCELLED]: "Trip already cancelled",
+        [TripStatus.PICKED_UP]: "Trip already picked up",
+        [TripStatus.NO_SHOW]: "User already marked as no show",
+        [TripStatus.COMPLETED]: "Trip already completed",
+      };
 
-      // prevent updating trip status if trip is already no show
-      // to ensure accurate extra charge calculations
-      if (
-        trip.status === TripStatus.NO_SHOW &&
-        newStatus === TripStatus.NO_SHOW
-      ) {
+      if (trip.status === newStatus && duplicateStatusChecks[newStatus]) {
         return emitError(
           socket,
           status.BAD_REQUEST,
-          "User already marked as no show"
+          duplicateStatusChecks[newStatus]
         );
       }
 
@@ -502,7 +489,28 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         );
       }
 
-      const updateData = {
+      // Cash payment users - carry forward extra charges for late cancellation fee and driver waiting fee to next ride
+      const shouldApplyExtraCharge =
+        extraCharge > 0 &&
+        (newStatus === TripStatus.CANCELLED ||
+          newStatus === TripStatus.NO_SHOW);
+
+      // Handle extra charges for cash payment users
+      if (shouldApplyExtraCharge && user.role === EnumUserRole.USER) {
+        await User.findByIdAndUpdate(
+          trip.user,
+          {
+            $inc: { outstandingFee: extraCharge },
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
+        );
+      }
+
+      const tripUpdateData = {
         status: newStatus,
         ...(newStatus === TripStatus.ARRIVED && { driverArrivedAt: now }),
         ...(newStatus === TripStatus.PICKED_UP && { extraCharge }),
@@ -519,17 +527,34 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           finalFare:
             (await fareCalculator(socket, duration, distance)) +
             trip.tollFee +
-            extraCharge,
+            extraCharge +
+            tripUser.outstandingFee,
         }),
       };
 
-      const updatedTrip = await Trip.findByIdAndUpdate(tripId, updateData, {
+      const updatedTrip = await Trip.findByIdAndUpdate(tripId, tripUpdateData, {
         new: true,
         runValidators: true,
         session,
       });
 
-      console.log(updatedTrip);
+      // Clear outstanding fee AFTER a user completes a trip successfully
+      if (
+        newStatus === TripStatus.COMPLETED &&
+        user.role === EnumUserRole.DRIVER
+      ) {
+        await User.findByIdAndUpdate(
+          trip.user,
+          {
+            $set: { outstandingFee: 0 },
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
+        );
+      }
 
       handleStatusNotifications(io, updatedTrip, newStatus);
 
