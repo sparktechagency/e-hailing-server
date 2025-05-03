@@ -51,11 +51,13 @@ const TripStatus = {
   STARTED: "started",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
+  NO_SHOW: "no_show",
 };
 
 const EnumTripExtraChargeType = {
   LATE_CANCELLATION: "late_cancellation",
   DRIVER_WAITING: "driver_waiting",
+  NO_SHOW: "no_show",
 };
 
 const UserAccountStatus = {

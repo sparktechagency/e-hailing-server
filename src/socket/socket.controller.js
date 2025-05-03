@@ -448,6 +448,19 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         return emitError(socket, status.BAD_REQUEST, "Trip already picked up");
       }
 
+      // prevent updating trip status if trip is already no show
+      // to ensure accurate extra charge calculations
+      if (
+        trip.status === TripStatus.NO_SHOW &&
+        newStatus === TripStatus.NO_SHOW
+      ) {
+        return emitError(
+          socket,
+          status.BAD_REQUEST,
+          "User already marked as no show"
+        );
+      }
+
       let extraCharge = 0;
 
       // Calculate late cancellation fee if trip is cancelled by user (between ON_THE_WAY and CANCELLED status)
@@ -476,11 +489,25 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         );
       }
 
+      // Calculate no show fee if user is a no show (between ARRIVED and PICKED_UP status)
+      if (
+        user.role === EnumUserRole.DRIVER &&
+        newStatus === TripStatus.NO_SHOW &&
+        trip.driverArrivedAt &&
+        trip.status === TripStatus.ARRIVED
+      ) {
+        extraCharge = calculateExtraCharge(
+          EnumTripExtraChargeType.NO_SHOW,
+          trip.driverArrivedAt
+        );
+      }
+
       const updateData = {
         status: newStatus,
         ...(newStatus === TripStatus.ARRIVED && { driverArrivedAt: now }),
         ...(newStatus === TripStatus.PICKED_UP && { extraCharge }),
         ...(newStatus === TripStatus.STARTED && { tripStartedAt: now }),
+        ...(newStatus === TripStatus.NO_SHOW && { extraCharge }),
         ...(newStatus === TripStatus.CANCELLED && {
           cancellationReason: reason,
           extraCharge,
@@ -507,7 +534,13 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
       handleStatusNotifications(io, updatedTrip, newStatus);
 
       // Update driver availability after trip completion and cancellation
-      if ([TripStatus.COMPLETED, TripStatus.CANCELLED].includes(newStatus)) {
+      if (
+        [
+          TripStatus.COMPLETED,
+          TripStatus.CANCELLED,
+          TripStatus.NO_SHOW,
+        ].includes(newStatus)
+      ) {
         await updateDriverAvailability(
           updatedTrip,
           socket,
@@ -609,6 +642,10 @@ const handleStatusNotifications = (io, trip, newStatus) => {
       rider: "Your trip has been cancelled",
       driver: "The trip has been cancelled",
     },
+    [TripStatus.NO_SHOW]: {
+      rider: "You are marked as no show. You will be charged a fee",
+      driver: "The user is marked as no show",
+    },
   };
 
   // Notify user
@@ -659,6 +696,21 @@ const removeStaleOnlineSessions = async () => {
 };
 
 const calculateExtraCharge = (type, referenceTime) => {
+  /**
+   * Calculates extra charges based on elapsed time and charge type
+   * @param {string} type - The type of extra charge (LATE_CANCELLATION, DRIVER_WAITING, or NO_SHOW)
+   * @param {string|Date} referenceTime - The reference time to calculate elapsed minutes from
+   * @returns {number} The calculated extra charge amount in currency units
+   *
+   * @description
+   * - For LATE_CANCELLATION or DRIVER_WAITING:
+   *   - 10 currency units if waited 10+ minutes
+   *   - 5 currency units if waited 5-9 minutes
+   *   - No charge if waited less than 5 minutes
+   * - For NO_SHOW:
+   *   - 10 currency units if waited 5+ minutes
+   *   - No charge if waited less than 5 minutes
+   */
   const minutesElapsed = (Date.now() - new Date(referenceTime)) / 60000;
   let extraCharge = 0;
 
@@ -668,6 +720,8 @@ const calculateExtraCharge = (type, referenceTime) => {
   ) {
     if (minutesElapsed >= 10) extraCharge = 10;
     else if (minutesElapsed >= 5) extraCharge = 5;
+  } else if (type === EnumTripExtraChargeType.NO_SHOW) {
+    if (minutesElapsed >= 5) extraCharge = 10;
   }
 
   return extraCharge;
@@ -681,6 +735,7 @@ const validateTripStatusPayload = (status, payload, socket) => {
     TripStatus.STARTED,
     TripStatus.COMPLETED,
     TripStatus.CANCELLED,
+    TripStatus.NO_SHOW,
   ];
 
   if (!allowedNewStatus.includes(status))
