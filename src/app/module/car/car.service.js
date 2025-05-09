@@ -8,6 +8,8 @@ const unlinkFile = require("../../../util/unlinkFile");
 const processFileUpdates = require("../../../util/processFileUpdates");
 const User = require("../user/User");
 const { default: mongoose } = require("mongoose");
+const convertToArray = require("../../../util/convertToArray");
+const updateFileArrayField = require("../../../util/updateFileArrayField");
 
 const postCar = async (req) => {
   validateFields(req, ["files", "body"]);
@@ -116,8 +118,17 @@ const updateCar = async (req) => {
   const car = await Car.findById(payload.carId).lean();
   if (!car) throw new ApiError(status.NOT_FOUND, "Car not found");
 
+  const deletedIndexes = convertToArray(
+    payload.car_image_deleted_indexes || "[]"
+  );
+
+  const updatedCarImages = updateFileArrayField(
+    car.car_image,
+    deletedIndexes,
+    files.car_image || []
+  );
+
   const fileFields = [
-    { key: "car_image", oldPath: car.car_image }, // array of images
     { key: "car_grant_image", oldPath: car.car_grant_image },
     { key: "car_insurance_image", oldPath: car.car_insurance_image },
     {
@@ -127,7 +138,13 @@ const updateCar = async (req) => {
   ];
 
   const fileUpdates = processFileUpdates(files, fileFields);
-  const updateData = { ...payload, ...fileUpdates, carId: undefined };
+  const updateData = {
+    ...payload,
+    ...fileUpdates,
+    ...(payload.car_image_deleted_indexes && { car_image: updatedCarImages }),
+    ...(files.car_image && { car_image: updatedCarImages }),
+    carId: undefined,
+  };
 
   const updatedCar = await Car.findByIdAndUpdate(payload.carId, updateData, {
     new: true,
