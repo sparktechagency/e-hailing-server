@@ -37,10 +37,7 @@ const postFeedback = async (userData, payload) => {
       userData.userId
     );
 
-  postNotification(
-    "New Feedback",
-    "Dudu got a new feedback. Check it out!"
-  );
+  postNotification("New Feedback", "Dudu got a new feedback. Check it out!");
 
   return feedback;
 };
