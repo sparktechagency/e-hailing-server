@@ -198,6 +198,39 @@ const getTripStatistics = async (userData, query) => {
   };
 };
 
+// driver specific ========================
+
+const getDriverCurrentTrip = async (userData, payload) => {
+  const validStatus = [
+    TripStatus.ACCEPTED,
+    TripStatus.ON_THE_WAY,
+    TripStatus.ARRIVED,
+    TripStatus.PICKED_UP,
+    TripStatus.STARTED,
+  ];
+
+  const trip = await Trip.findOne({
+    driver: userData.userId,
+    status: { $in: validStatus },
+  })
+    .populate([
+      {
+        path: "user",
+        select: "name profile_image",
+      },
+      {
+        path: "driver",
+        select: "name profile_image",
+      },
+    ])
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  if (!trip) throw new ApiError(status.NOT_FOUND, "No current trip found.");
+
+  return trip;
+};
+
 // peak hours ========================
 
 const getPeakHours = async (userData, payload) => {
@@ -279,6 +312,7 @@ const TripService = {
   deleteTrip,
   updateTollFee,
   getTripStatistics,
+  getDriverCurrentTrip,
   getPeakHours,
   postTimeRange,
   deleteTimeRange,

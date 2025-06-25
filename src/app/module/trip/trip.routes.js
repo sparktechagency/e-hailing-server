@@ -28,6 +28,13 @@ router
     TripController.getTripStatistics
   )
 
+  // driver specific ========================
+  .get(
+    "/get-driver-current-trip",
+    auth(config.auth_level.driver),
+    TripController.getDriverCurrentTrip
+  )
+
   // Peak hour routes =========================
   .get(
     "/get-peak-hours",

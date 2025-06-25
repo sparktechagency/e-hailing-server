@@ -52,6 +52,18 @@ const getTripStatistics = catchAsync(async (req, res) => {
   });
 });
 
+// driver specific ========================
+
+const getDriverCurrentTrip = catchAsync(async (req, res) => {
+  const result = await TripService.getDriverCurrentTrip(req.user, req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Driver current trip retrieved",
+    data: result,
+  });
+});
+
 // Peak hour =========================
 const getPeakHours = catchAsync(async (req, res) => {
   const result = await TripService.getPeakHours();
@@ -99,6 +111,7 @@ const TripController = {
   deleteTrip,
   updateTollFee,
   getTripStatistics,
+  getDriverCurrentTrip,
   getPeakHours,
   postTimeRange,
   deleteTimeRange,

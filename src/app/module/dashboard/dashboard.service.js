@@ -415,7 +415,7 @@ const editDriver = async (req) => {
   for (const { key, oldPath } of fileFields) {
     if (files[key]) {
       updateData[key] = files[key][0].path;
-      unlinkFile(oldPath);
+      if (oldPath) unlinkFile(oldPath);
     }
   }
 

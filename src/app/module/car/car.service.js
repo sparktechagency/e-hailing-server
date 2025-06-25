@@ -265,7 +265,9 @@ const deleteCar = async (userData, payload) => {
     await session.commitTransaction();
 
     // only unlink the images after the transaction is committed
-    pathsToUnlink.forEach((path) => unlinkFile(path));
+    pathsToUnlink.forEach((path) => {
+      if (path) unlinkFile(path);
+    });
 
     return result;
   } catch (err) {
