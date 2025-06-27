@@ -42,6 +42,9 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    id_or_passport_image: {
+      type: String,
+    },
 
     // driver specific fields
     locationCoordinates: {
@@ -68,9 +71,6 @@ const UserSchema = new Schema(
       type: String,
     },
     licenseExpiry: {
-      type: String,
-    },
-    id_or_passport_image: {
       type: String,
     },
     psv_license_image: {

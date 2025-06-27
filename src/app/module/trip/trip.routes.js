@@ -28,6 +28,16 @@ router
     TripController.getTripStatistics
   )
 
+  // fare calculator ========================
+  .post("/get-fare", auth(config.auth_level.user), TripController.getFare)
+
+  // driver specific ========================
+  .get(
+    "/get-driver-current-trip",
+    auth(config.auth_level.driver),
+    TripController.getDriverCurrentTrip
+  )
+
   // Peak hour routes =========================
   .get(
     "/get-peak-hours",
