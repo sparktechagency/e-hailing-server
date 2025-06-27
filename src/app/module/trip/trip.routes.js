@@ -28,6 +28,9 @@ router
     TripController.getTripStatistics
   )
 
+  // fare calculator ========================
+  .post("/get-fare", auth(config.auth_level.user), TripController.getFare)
+
   // driver specific ========================
   .get(
     "/get-driver-current-trip",

@@ -64,6 +64,17 @@ const getDriverCurrentTrip = catchAsync(async (req, res) => {
   });
 });
 
+// fare calculator ========================
+const getFare = catchAsync(async (req, res) => {
+  const result = await TripService.getFare(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Fare calculated",
+    data: result,
+  });
+});
+
 // Peak hour =========================
 const getPeakHours = catchAsync(async (req, res) => {
   const result = await TripService.getPeakHours();
@@ -112,6 +123,7 @@ const TripController = {
   updateTollFee,
   getTripStatistics,
   getDriverCurrentTrip,
+  getFare,
   getPeakHours,
   postTimeRange,
   deleteTimeRange,

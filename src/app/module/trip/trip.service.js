@@ -14,6 +14,7 @@ const PeakHour = require("./PeakHour");
 const isPeakHour = require("../../../util/isPeakHour");
 const getTimeRange = require("../../../util/getTimeRage");
 const { default: mongoose } = require("mongoose");
+const fareCalculator = require("../../../util/fareCalculator");
 
 const getTrip = async (userData, query) => {
   validateFields(query, ["tripId"]);
@@ -231,6 +232,21 @@ const getDriverCurrentTrip = async (userData, payload) => {
   return trip;
 };
 
+// fare calculator ========================
+
+const getFare = async (userData, payload) => {
+  validateFields(payload, ["duration", "distance"]);
+
+  const estimatedFare = await fareCalculator(
+    null,
+    payload.duration,
+    payload.distance,
+    payload.coupon
+  );
+
+  return { estimatedFare };
+};
+
 // peak hours ========================
 
 const getPeakHours = async (userData, payload) => {
@@ -313,6 +329,7 @@ const TripService = {
   updateTollFee,
   getTripStatistics,
   getDriverCurrentTrip,
+  getFare,
   getPeakHours,
   postTimeRange,
   deleteTimeRange,
