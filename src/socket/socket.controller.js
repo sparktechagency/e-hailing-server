@@ -333,10 +333,9 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
     }
   );
 
-  if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
+  console.log(updatedTrip);
 
-  if (!updatedTrip.driver)
-    emitError(socket, status.NOT_FOUND, "This trip has no driver");
+  if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
 
   await User.findByIdAndUpdate(
     updatedTrip.driver,
@@ -358,7 +357,7 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
       statusCode: status.OK,
       success: true,
       message: "Driver location updated",
-      data: updatedTrip,
+      data: updatedTrip.driverCoordinates,
     })
   );
 
@@ -369,7 +368,7 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
       statusCode: status.OK,
       success: true,
       message: "Your location updated",
-      data: updatedTrip,
+      data: updatedTrip.driverCoordinates,
     })
   );
 });
