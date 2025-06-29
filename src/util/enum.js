@@ -49,6 +49,7 @@ const TripStatus = {
   ARRIVED: "arrived",
   PICKED_UP: "picked_up",
   STARTED: "started",
+  DESTINATION_REACHED: "destination_reached",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
   NO_SHOW: "no_show",

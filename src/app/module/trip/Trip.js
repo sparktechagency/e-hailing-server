@@ -128,6 +128,7 @@ const tripSchema = new Schema(
           TripStatus.ARRIVED,
           TripStatus.PICKED_UP,
           TripStatus.STARTED,
+          TripStatus.DESTINATION_REACHED,
           TripStatus.COMPLETED,
           TripStatus.CANCELLED,
           TripStatus.NO_SHOW,

@@ -335,9 +335,6 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
 
   if (!updatedTrip) emitError(socket, status.NOT_FOUND, "Trip not found");
 
-  if (!updatedTrip.driver)
-    emitError(socket, status.NOT_FOUND, "This trip has no driver");
-
   await User.findByIdAndUpdate(
     updatedTrip.driver,
     {
@@ -358,7 +355,7 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
       statusCode: status.OK,
       success: true,
       message: "Driver location updated",
-      data: updatedTrip,
+      data: updatedTrip.driverCoordinates,
     })
   );
 
@@ -369,7 +366,7 @@ const updateDriverLocation = socketCatchAsync(async (socket, io, payload) => {
       statusCode: status.OK,
       success: true,
       message: "Your location updated",
-      data: updatedTrip,
+      data: updatedTrip.driverCoordinates,
     })
   );
 });
@@ -437,6 +434,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         [TripStatus.CANCELLED]: "Trip already cancelled",
         [TripStatus.PICKED_UP]: "Trip already picked up",
         [TripStatus.NO_SHOW]: "User already marked as no show",
+        [TripStatus.DESTINATION_REACHED]: "Trip already reached destination",
         [TripStatus.COMPLETED]: "Trip already completed",
       };
 
@@ -510,6 +508,7 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         );
       }
 
+      // initiate trip update data
       const tripUpdateData = {
         status: newStatus,
         ...(newStatus === TripStatus.ARRIVED && { driverArrivedAt: now }),
@@ -520,15 +519,17 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
           cancellationReason: reason,
           extraCharge,
         }),
-        ...(newStatus === TripStatus.COMPLETED && {
+        ...(newStatus === TripStatus.DESTINATION_REACHED && {
           duration,
           distance,
-          tripCompletedAt: now,
           finalFare:
             (await fareCalculator(socket, duration, distance)) +
             trip.tollFee +
-            extraCharge +
+            trip.extraCharge +
             tripUser.outstandingFee,
+        }),
+        ...(newStatus === TripStatus.COMPLETED && {
+          tripCompletedAt: now,
         }),
       };
 
@@ -659,6 +660,10 @@ const handleStatusNotifications = (io, trip, newStatus) => {
       rider: "Your trip has started",
       driver: "The trip has started",
     },
+    [TripStatus.DESTINATION_REACHED]: {
+      rider: "You have reached the destination",
+      driver: "The rider has reached the destination",
+    },
     [TripStatus.COMPLETED]: {
       rider: "Your trip has been completed successfully",
       driver: "You have successfully completed the trip",
@@ -758,6 +763,7 @@ const validateTripStatusPayload = (status, payload, socket) => {
     TripStatus.ARRIVED,
     TripStatus.PICKED_UP,
     TripStatus.STARTED,
+    TripStatus.DESTINATION_REACHED,
     TripStatus.COMPLETED,
     TripStatus.CANCELLED,
     TripStatus.NO_SHOW,
@@ -770,7 +776,7 @@ const validateTripStatusPayload = (status, payload, socket) => {
       `Invalid status. Valid status are ${allowedNewStatus.join(", ")}`
     );
 
-  if (status === TripStatus.COMPLETED)
+  if (status === TripStatus.DESTINATION_REACHED)
     validateSocketFields(socket, payload, ["duration", "distance"]);
 
   if (status === TripStatus.CANCELLED)
