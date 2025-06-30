@@ -1,8 +1,23 @@
+// user enums
+
 const EnumUserRole = {
   USER: "USER",
   DRIVER: "DRIVER",
   ADMIN: "ADMIN",
 };
+
+const LoginProvider = {
+  LOCAL: "local",
+  GOOGLE: "google",
+  APPLE: "apple",
+};
+
+const UserAccountStatus = {
+  VERIFIED: "verified",
+  UNVERIFIED: "unverified",
+};
+
+// payment enums
 
 const EnumPaymentType = {
   CASH: "cash",
@@ -18,6 +33,8 @@ const EnumPaymentFor = {
   TRIP: "trip",
   COIN_PURCHASE: "coin_purchase",
 };
+
+// socket enums
 
 const EnumSocketEvent = {
   CONNECTION: "connection",
@@ -36,11 +53,7 @@ const EnumSocketEvent = {
   SEND_MESSAGE: "send_message",
 };
 
-const LoginProvider = {
-  LOCAL: "local",
-  GOOGLE: "google",
-  APPLE: "apple",
-};
+// trip enums
 
 const TripStatus = {
   REQUESTED: "requested",
@@ -61,9 +74,9 @@ const EnumTripExtraChargeType = {
   NO_SHOW: "no_show",
 };
 
-const UserAccountStatus = {
-  VERIFIED: "verified",
-  UNVERIFIED: "unverified",
+const EnumTripType = {
+  INSTANT: "INSTANT",
+  SCHEDULED: "SCHEDULED",
 };
 
 module.exports = {
@@ -76,4 +89,5 @@ module.exports = {
   TripStatus,
   EnumTripExtraChargeType,
   UserAccountStatus,
+  EnumTripType,
 };
