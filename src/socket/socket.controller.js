@@ -537,7 +537,15 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         new: true,
         runValidators: true,
         session,
-      });
+      }).populate([
+        {
+          path: "user",
+        },
+        {
+          path: "driver",
+        },
+      ]);
+      // console.log(updatedTrip);
 
       // Clear outstanding fee AFTER a user completes a trip successfully
       if (
@@ -679,7 +687,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
   };
 
   // Notify user
-  io.to(trip.user.toString()).emit(
+  io.to(trip.user._id.toString()).emit(
     eventName,
     emitResult({
       statusCode: status.OK,
@@ -692,8 +700,8 @@ const handleStatusNotifications = (io, trip, newStatus) => {
   postNotification(`Trip update`, messageMap[newStatus].rider, trip.user);
 
   // Notify driver if any
-  if (trip.driver) {
-    io.to(trip.driver.toString()).emit(
+  if (trip.driver._id) {
+    io.to(trip.driver._id.toString()).emit(
       eventName,
       emitResult({
         statusCode: status.OK,
