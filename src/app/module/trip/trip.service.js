@@ -234,6 +234,41 @@ const getDriverCurrentTrip = async (userData, payload) => {
   return trip;
 };
 
+// user specific ========================
+
+const getUserCurrentTrip = async (userData, payload) => {
+  const validStatus = [
+    TripStatus.ACCEPTED,
+    TripStatus.ON_THE_WAY,
+    TripStatus.ARRIVED,
+    TripStatus.PICKED_UP,
+    TripStatus.STARTED,
+    TripStatus.DESTINATION_REACHED,
+  ];
+
+  const trip = await Trip.findOne({
+    user: userData.userId,
+    status: { $in: validStatus },
+  })
+    .populate([
+      {
+        path: "user",
+      },
+      {
+        path: "driver",
+        populate: {
+          path: "assignedCar",
+        },
+      },
+    ])
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  if (!trip) throw new ApiError(status.NOT_FOUND, "No current trip found.");
+
+  return trip;
+};
+
 // fare calculator ========================
 
 const getFare = async (userData, payload) => {
@@ -331,6 +366,7 @@ const TripService = {
   updateTollFee,
   getTripStatistics,
   getDriverCurrentTrip,
+  getUserCurrentTrip,
   getFare,
   getPeakHours,
   postTimeRange,
