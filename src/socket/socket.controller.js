@@ -117,7 +117,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
       coordinates: [Number(payload.dropOffLong), Number(payload.dropOffLat)],
     },
     duration: Math.ceil(Number(payload.duration)),
-    distance: Math.ceil(Number(payload.distance)) / 1000,
+    distance: Math.ceil(Number(payload.distance)), // in meter
     estimatedFare: await fareCalculator(
       socket,
       payload.duration,
@@ -233,7 +233,8 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
 
   try {
     const result = await session.withTransaction(async () => {
-      const acceptedTrip = await Trip.findOneAndUpdate(
+      // const acceptedTrip = await Trip.findOneAndUpdate(
+      await Trip.findOneAndUpdate(
         { _id: tripId, status: TripStatus.REQUESTED },
         {
           $set: {
@@ -253,7 +254,23 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
           runValidators: true,
           session,
         }
-      ).populate("user driver");
+      ).lean();
+
+      // then query again to populate deeply
+      const acceptedTrip = await Trip.findById(tripId)
+        .populate([
+          {
+            path: "user",
+          },
+          {
+            path: "driver",
+            populate: {
+              path: "assignedCar",
+            },
+          },
+        ])
+        .session(session)
+        .lean();
 
       if (!acceptedTrip)
         emitError(socket, status.CONFLICT, "Trip no longer available");
@@ -533,11 +550,26 @@ const updateTripStatus = socketCatchAsync(async (socket, io, payload) => {
         }),
       };
 
-      const updatedTrip = await Trip.findByIdAndUpdate(tripId, tripUpdateData, {
+      await Trip.findByIdAndUpdate(tripId, tripUpdateData, {
         new: true,
         runValidators: true,
         session,
-      });
+      }).lean();
+
+      const updatedTrip = await Trip.findById(tripId)
+        .populate([
+          {
+            path: "user",
+          },
+          {
+            path: "driver",
+            populate: {
+              path: "assignedCar",
+            },
+          },
+        ])
+        .session(session)
+        .lean();
 
       // Clear outstanding fee AFTER a user completes a trip successfully
       if (
@@ -679,7 +711,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
   };
 
   // Notify user
-  io.to(trip.user.toString()).emit(
+  io.to(trip.user._id.toString()).emit(
     eventName,
     emitResult({
       statusCode: status.OK,
@@ -693,7 +725,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
 
   // Notify driver if any
   if (trip.driver) {
-    io.to(trip.driver.toString()).emit(
+    io.to(trip.driver._id.toString()).emit(
       eventName,
       emitResult({
         statusCode: status.OK,

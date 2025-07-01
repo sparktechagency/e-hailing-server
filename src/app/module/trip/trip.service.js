@@ -208,6 +208,7 @@ const getDriverCurrentTrip = async (userData, payload) => {
     TripStatus.ARRIVED,
     TripStatus.PICKED_UP,
     TripStatus.STARTED,
+    TripStatus.DESTINATION_REACHED,
   ];
 
   const trip = await Trip.findOne({
@@ -217,11 +218,12 @@ const getDriverCurrentTrip = async (userData, payload) => {
     .populate([
       {
         path: "user",
-        select: "name profile_image",
       },
       {
         path: "driver",
-        select: "name profile_image",
+        populate: {
+          path: "assignedCar",
+        },
       },
     ])
     .sort({ updatedAt: -1 })
