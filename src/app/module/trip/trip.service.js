@@ -221,6 +221,9 @@ const getDriverCurrentTrip = async (userData, payload) => {
       },
       {
         path: "driver",
+        populate: {
+          path: "assignedCar",
+        },
       },
     ])
     .sort({ updatedAt: -1 })
