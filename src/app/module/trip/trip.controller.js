@@ -53,13 +53,23 @@ const getTripStatistics = catchAsync(async (req, res) => {
 });
 
 // driver specific ========================
-
 const getDriverCurrentTrip = catchAsync(async (req, res) => {
   const result = await TripService.getDriverCurrentTrip(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Driver current trip retrieved",
+    data: result,
+  });
+});
+
+// user specific ========================
+const getUserCurrentTrip = catchAsync(async (req, res) => {
+  const result = await TripService.getUserCurrentTrip(req.user, req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User current trip retrieved",
     data: result,
   });
 });
@@ -123,6 +133,7 @@ const TripController = {
   updateTollFee,
   getTripStatistics,
   getDriverCurrentTrip,
+  getUserCurrentTrip,
   getFare,
   getPeakHours,
   postTimeRange,

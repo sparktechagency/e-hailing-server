@@ -28,6 +28,13 @@ router
     TripController.getTripStatistics
   )
 
+  // user specific ========================
+  .get(
+    "/get-user-current-trip",
+    auth(config.auth_level.user),
+    TripController.getUserCurrentTrip
+  )
+
   // fare calculator ========================
   .post("/get-fare", auth(config.auth_level.user), TripController.getFare)
 
