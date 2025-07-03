@@ -49,10 +49,17 @@ const getAllTrips = async (userData, query) => {
    * - If the user is an **admin**, fetches all trips.
    * - Otherwise, fetches trips associated with the user or driver.
    */
+
+  const queryObj =
+    userData.role === EnumUserRole.ADMIN
+      ? {}
+      : {
+          [userData.role === EnumUserRole.DRIVER ? "driver" : "user"]:
+            userData.userId,
+        };
+
   const tripQuery = new QueryBuilder(
-    Trip.find({
-      ...(userData.role === !EnumUserRole.ADMIN && { user: userData.userId }),
-    })
+    Trip.find(queryObj)
       .populate([
         {
           path: "user",
