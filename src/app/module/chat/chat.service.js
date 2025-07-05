@@ -46,22 +46,48 @@ const postChat = async (userData, payload) => {
 };
 
 const getChatMessages = async (userData, query) => {
+  /**
+   * Paginate ONLY the messages array while keeping the existing response format.
+   * Accepts optional `page` & `limit` query params (default 1 & 10).
+   */
   validateFields(query, ["chatId"]);
 
-  const chat = await Chat.findOne({
-    _id: query.chatId,
-  })
-    .populate([
-      {
-        path: "participants",
-        select: "name phoneNumber profile_image",
-      },
-    ])
+  const page = Number(query.page) > 0 ? Number(query.page) : 1;
+  const limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
+  const skip = (page - 1) * limit;
+
+  // Fetch chat with participants (without populating messages to avoid huge payload)
+  const chat = await Chat.findOne({ _id: query.chatId })
+    .populate({
+      path: "participants",
+      select: "name phoneNumber profile_image",
+    })
     .lean();
 
   if (!chat) throw new ApiError(status.NOT_FOUND, "Chat not found");
 
-  return chat;
+  // Total number of messages in the chat
+  const total = await Message.countDocuments({
+    _id: { $in: chat.messages },
+  });
+
+  // Paginate messages
+  const messages = await Message.find({ _id: { $in: chat.messages } })
+    .sort({ createdAt: -1 }) // newest first; adjust as needed
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  return {
+    ...chat,
+    messages,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit) || 1,
+    },
+  };
 };
 
 const getAllChats = async (userData, query) => {
