@@ -644,7 +644,10 @@ const sendMessage = socketCatchAsync(async (socket, io, payload) => {
         statusCode: status.OK,
         success: true,
         message: "Message sent successfully",
-        data: newMessage,
+        data: {
+          chatId,
+          ...newMessage.toObject(),
+        },
       })
     );
 
@@ -655,7 +658,10 @@ const sendMessage = socketCatchAsync(async (socket, io, payload) => {
         statusCode: status.OK,
         success: true,
         message: "Message sent successfully",
-        data: newMessage,
+        data: {
+          chatId,
+          ...newMessage.toObject(),
+        },
       })
     );
 
