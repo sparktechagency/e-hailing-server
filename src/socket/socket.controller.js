@@ -621,7 +621,7 @@ const sendMessage = socketCatchAsync(async (socket, io, payload) => {
       participants: { $all: [userId, receiverId] },
     });
 
-    if (!existingChat) throw new ApiError(status.BAD_REQUEST, "No chat found");
+    if (!existingChat) emitError(socket, status.NOT_FOUND, "Chat not found");
 
     const newMessage = await Message.create({
       sender: userId,
