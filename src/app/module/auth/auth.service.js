@@ -231,7 +231,8 @@ const loginAccount = async (payload) => {
 const socialLogin = async (payload) => {
   validateFields(payload, ["email", "name", "role", "provider"]);
 
-  const { email, name, role, provider, profile_image, address } = payload || {};
+  const { email, name, role, provider, profile_image, address, phoneNumber } =
+    payload || {};
 
   if (provider === LoginProvider.LOCAL)
     throw new ApiError(status.BAD_REQUEST, "Invalid provider");
@@ -250,6 +251,7 @@ const socialLogin = async (payload) => {
       provider,
       isActive: true,
     };
+    validateFields(payload, ["phoneNumber"]);
 
     auth = await Auth.create(authData);
 
@@ -258,6 +260,7 @@ const socialLogin = async (payload) => {
       name,
       email,
       role,
+      phoneNumber,
       ...(profile_image && { profile_image }),
       ...(address && { address }),
     };

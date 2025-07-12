@@ -13,6 +13,7 @@ const {
   EnumUserRole,
   TripStatus,
   EnumTripExtraChargeType,
+  EnumTripType,
 } = require("../util/enum");
 const postNotification = require("../util/postNotification");
 const emitResult = require("./emitResult");
