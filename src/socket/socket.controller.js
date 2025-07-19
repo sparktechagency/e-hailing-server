@@ -221,7 +221,7 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
     }
   };
 
-  const timeoutRef = setTimeout(timeoutHandler, 1000 * 60 * 3);
+  const timeoutRef = setTimeout(timeoutHandler, 1000 * 60 * 0.5); // 30 seconds
   tripTimeouts.set(trip._id.toString(), timeoutRef);
 });
 
