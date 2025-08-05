@@ -4,7 +4,7 @@ const globalErrorHandler = require("./app/middleware/globalErrorHandler");
 const routes = require("./app/routes");
 const NotFoundHandler = require("./error/NotFoundHandler");
 const cookieParser = require("cookie-parser");
-const corsOptions = require("./util/corsOptions");
+const corsOptions = require("./util/corsoptions");
 
 const app = express();
 
