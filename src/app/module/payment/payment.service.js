@@ -10,6 +10,10 @@ const {
   EnumPaymentType,
 } = require("../../../util/enum");
 
+const createPayment = async ()=>{
+  
+}
+
 const getPayment = async (userData, query) => {
   validateFields(query, ["paymentId"]);
 
