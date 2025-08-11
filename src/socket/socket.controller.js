@@ -105,11 +105,13 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
     "dropOffLong",
     "duration",
     "distance",
+    "tripType" //filed to recognised the trip type, ride or pre-book ride
   ]);
 
   const tripData = {
     user: payload.userId,
     pickUpAddress: payload.pickUpAddress,
+    tripType: payload.tripType,
     pickUpCoordinates: {
       coordinates: [Number(payload.pickUpLong), Number(payload.pickUpLat)],
     },

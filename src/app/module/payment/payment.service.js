@@ -9,9 +9,19 @@ const {
   EnumPaymentFor,
   EnumPaymentType,
 } = require("../../../util/enum");
+const config = require("../../../config");
 
-const createPayment = async ()=>{
-  
+const initiatePayment = async ()=>{
+    const fiuu_url = 'https://pay.fiuu.com/RMS/API/Direct/1.4.0/index.php'
+    const data = {
+      MerchantId:config.fiuu.merchant_id,
+      ReferenceNo:'101',
+      TxnType:'abc',
+      TxnChannel:'DRAGONPAY',
+      TxnCurrency:"MY",
+      TxnAmount:11,
+    
+    }
 }
 
 const getPayment = async (userData, query) => {

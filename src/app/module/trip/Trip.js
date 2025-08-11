@@ -17,6 +17,11 @@ const tripSchema = new Schema(
       type: ObjectId,
       ref: "Car",
     },
+    tripType:{                          //
+      type:String,                      //  New trip field for tripe type
+      enum:["ride","pre_book"],         //  Two possible option for trip ride or pre-book ride
+      default:"ride"                    //
+    },
     pickUpAddress: {
       type: String,
       required: true,
