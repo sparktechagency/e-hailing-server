@@ -1,7 +1,7 @@
 const AdminNotification = require("../app/module/notification/AdminNotification");
 const Notification = require("../app/module/notification/Notification");
 const catchAsync = require("../util/catchAsync");
-const firebaseClient = require('../firebase')
+const firebaseClient = require('../app/module/notification/firebase')
 
 //add new parameter token for send push notification to the client usign firebase
 

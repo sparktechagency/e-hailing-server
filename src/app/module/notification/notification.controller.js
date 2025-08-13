@@ -2,6 +2,23 @@ const NotificationService = require("./notification.service");
 const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
 
+
+const sendNotification  = catchAsync(async (req,res)=>{
+
+  const {token} = req.query
+
+  const payload = req.body
+
+  const data = await NotificationService.sendNotification(token, payload)
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Notification sent",
+    data,
+  });
+
+})
+
 const getNotification = catchAsync(async (req, res) => {
   const result = await NotificationService.getNotification(req.user, req.query);
   sendResponse(res, {
@@ -56,6 +73,7 @@ const NotificationController = {
   getAllNotifications,
   updateAsReadUnread,
   deleteNotification,
+  sendNotification
 };
 
 module.exports = NotificationController;

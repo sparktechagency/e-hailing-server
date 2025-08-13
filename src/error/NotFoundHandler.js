@@ -1,3 +1,4 @@
+
 class NotFoundHandler {
   static handle(req, res) {
     return res.status(404).json({

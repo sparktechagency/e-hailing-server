@@ -181,7 +181,7 @@ const activateAccount = async (payload) => {
 };
 
 const loginAccount = async (payload) => {
-  const { email, password } = payload;
+  const { email, password, token } = payload;
 
   const auth = await Auth.isAuthExist(email);
 
@@ -200,6 +200,8 @@ const loginAccount = async (payload) => {
   ) {
     throw new ApiError(status.BAD_REQUEST, "Password is incorrect");
   }
+  // Update token whenever user login 
+  await User.updateOne({authId:auth._id}, {token:token})
 
   let result;
   switch (auth.role) {
@@ -209,6 +211,8 @@ const loginAccount = async (payload) => {
     default:
       result = await User.findOne({ authId: auth._id }).populate("authId");
   }
+
+
 
   const tokenPayload = {
     authId: auth._id,

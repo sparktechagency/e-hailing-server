@@ -6,6 +6,11 @@ const PaymentController = require("./payment.controller");
 const router = express.Router();
 
 router
+
+  .get("/initiate", 
+    // auth(config.auth_level.user),
+    PaymentController.initiatePayment
+  )
   .get(
     "/get-payment",
     auth(config.auth_level.user),
@@ -26,5 +31,6 @@ router
     auth(config.auth_level.driver),
     PaymentController.getDriverEarningReport
   );
+  
 
 module.exports = router;

@@ -5,6 +5,26 @@ const validateFields = require("../../../util/validateFields");
 const Notification = require("./Notification");
 const { EnumUserRole } = require("../../../util/enum");
 const AdminNotification = require("./AdminNotification");
+const firebaseClient = require("./firebase")
+
+
+//This service only for test notification
+const sendNotification = async (token,payload)=>{
+  const {title = "Test Notification", message = "This is a test notification"} = payload
+  console.log(title)
+  try{
+
+    if(!token){
+      throw new ApiError(status.BAD_REQUEST, "token must not be empty")
+    }
+   const messageData =  await firebaseClient.messaging().send({notification:{title,body:message}, token})
+   return messageData
+  }catch(err){
+    console.log("firebase: message sending failed!")
+    throw err
+  }
+  
+}
 
 const getNotification = async (userData, query) => {
   const { role } = userData;
@@ -89,6 +109,7 @@ const NotificationService = {
   getAllNotifications,
   updateAsReadUnread,
   deleteNotification,
+  sendNotification
 };
 
 module.exports = NotificationService;

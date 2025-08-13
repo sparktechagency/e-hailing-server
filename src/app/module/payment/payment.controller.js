@@ -2,6 +2,18 @@ const PaymentService = require("./payment.service");
 const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
 
+const initiatePayment = catchAsync(async(req, res)=>{
+  const url = await PaymentService.initiatePayment()
+  res.redirect(url)
+
+  sendResponse(res, {
+    statusCode:200,
+    success:true,
+    message:"Payement request initiated",
+    data:url
+  })
+})
+
 const getPayment = catchAsync(async (req, res) => {
   const result = await PaymentService.getPayment(req.user, req.query);
   sendResponse(res, {
@@ -39,6 +51,7 @@ const PaymentController = {
   getPayment,
   getAllPayments,
   getDriverEarningReport,
+  initiatePayment
 };
 
 module.exports = PaymentController;

@@ -16,6 +16,11 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
+    // token field to accept firebase fcm token
+    token:{
+      type: String,
+      required:false
+    },
     email: {
       type: String,
       required: true,

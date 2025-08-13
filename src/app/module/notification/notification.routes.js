@@ -6,6 +6,9 @@ const NotificationController = require("./notification.controller");
 const router = express.Router();
 
 router
+  .post("/send-notification",
+   NotificationController.sendNotification
+  )
   .get(
     "/get-notification",
     auth(config.auth_level.user),
