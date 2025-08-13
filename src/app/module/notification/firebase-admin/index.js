@@ -1,6 +1,5 @@
 const admin = require('firebase-admin')
-const config = require('../../../../config')
-const keys = require('./keys.json')
+const keys = require('../../../../../Keys.json')
 
 
 try{
