@@ -5,13 +5,28 @@ const validateFields = require("../../../util/validateFields");
 const Notification = require("./Notification");
 const { EnumUserRole } = require("../../../util/enum");
 const AdminNotification = require("./AdminNotification");
-const firebaseClient = require("./firebase")
+const firebaseClient = require("./firebase-admin")
+const User = require('../user/User')
 
 
-//This service only for test notification
+const sendNotificationByUserId = async (userId, payload)=>{
+  const user = await User.findById(userId)
+  
+  if(!user){
+    throw new ApiError(status.NOT_FOUND, "User does not exist")
+  }
+
+  validateFields(payload, ["title", "message"])
+
+  if(user.token){
+    await sendNotification(token, payload)
+  }
+}
+
+//This service only for test the notification
 const sendNotification = async (token,payload)=>{
   const {title = "Test Notification", message = "This is a test notification"} = payload
-  console.log(title)
+ 
   try{
 
     if(!token){
@@ -109,7 +124,8 @@ const NotificationService = {
   getAllNotifications,
   updateAsReadUnread,
   deleteNotification,
-  sendNotification
+  sendNotification,
+  sendNotificationByUserId
 };
 
 module.exports = NotificationService;
