@@ -7,3 +7,4 @@ dist/
 entrypoint.sh
 yarn.lock
 package-lock.json
+Keys.json
