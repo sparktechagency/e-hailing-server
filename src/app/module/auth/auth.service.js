@@ -233,9 +233,9 @@ const loginAccount = async (payload) => {
 };
 
 const socialLogin = async (payload) => {
-  validateFields(payload, ["email", "name", "role", "provider"]);
+  validateFields(payload, ["email", "name", "role", "provider", "token"]);
 
-  const { email, name, role, provider, profile_image, address, phoneNumber } =
+  const { email, name, role, provider, profile_image, address, phoneNumber, token } =
     payload || {};
 
   if (provider === LoginProvider.LOCAL)
@@ -273,6 +273,9 @@ const socialLogin = async (payload) => {
 
     message = `Account created successfully`;
   }
+
+  //update token for social login
+  await User.updateOne({authId:auth._id}, {token})
 
   const tokenPayload = {
     authId: auth._id,

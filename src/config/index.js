@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 const path = require("path");
-const firebaseJson = require("../../keys.json")
+// const firebaseJson = require("../../keys.json")
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),
@@ -20,7 +20,7 @@ const config = {
   port: process.env.PORT,
   base_url: process.env.BASE_URL,
   database_url: process.env.MONGO_URL,
-  firebaseKeys: firebaseJson,
+  // firebaseKeys: firebaseJson,
   auth_level: {
     user: ["USER", "DRIVER", "ADMIN", "SUPER_ADMIN"],
     driver: ["DRIVER", "ADMIN", "SUPER_ADMIN"],

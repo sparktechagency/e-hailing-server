@@ -6,27 +6,20 @@ const validateFields = require("../../../util/validateFields");
 const { default: mongoose } = require("mongoose");
 const crypto = require('crypto')
 const querystring = require('querystring')
-
+const FiuuService = require("./fiuu.service");
 const {
   EnumPaymentStatus,
   EnumPaymentFor,
   EnumPaymentType,
 } = require("../../../util/enum");
-const config = require("../../../config");
-const FiuuService = require("./fiuu.service");
+
+
+
 
 const initiatePayment = async ()=>{
+  //sandbox url for fiuu payment srevice
     const fiuu_url = `https://sandbox-payment.fiuu.com/RMS/pay/${FiuuService.merchantId}/`
-  //  merchant_ID: MERCHANT_ID,
-  //           orderid: refNo,
-  //           amount: amount,
-  //           country:"MY",
-  //           currency:"MYR",
-  //           channel: "credit", // This is the key difference from hosted payment
-  //           bill_name: "SAHIN",
-  //           bill_email: "ABC@gmail.com",
-  //           bill_mobile:"01621839863",
-  //           bill_desc:"ABC bill",
+
     const data = {
       merchant_ID:FiuuService.merchantId,
       orderid:'101',
@@ -36,26 +29,13 @@ const initiatePayment = async ()=>{
       bill_name:"Sahin",
       bill_email:"abc@example.com",
       bill_mobile:'047843932033',
-      vcode: generateVCode(11, FiuuService.merchantId, '101',FiuuService.Verify_Key)
+      vcode: FiuuService.generateVcode(11, '101')
     }
 
     return `${fiuu_url}?${querystring.encode(data)}`
 }
 
-function generateVCode(amount, merchantId, orderId, verifyKey) {
-  const raw = `${amount}${merchantId}${orderId}${verifyKey}`;
-  return crypto.createHash('md5').update(raw).digest('hex');
-}
 
-function verifySKey(data, secretKey) {
-  const preSkey = crypto.createHash('md5').update(
-    `${data.tranID}${data.orderid}${data.status}${data.domain}${data.amount}${data.currency}`
-  ).digest('hex');
-  const skey = crypto.createHash('md5').update(
-    `${data.paydate}${data.domain}${preSkey}${data.appcode}${secretKey}`
-  ).digest('hex');
-  return skey === data.skey;
-}
 
 const getPayment = async (userData, query) => {
   validateFields(query, ["paymentId"]);
