@@ -33,7 +33,7 @@ const FiuuService = {
 //send vcode to payment request endpoint
 
 function generateVcode(amount, orderId) {
-  const raw = `${amount}${FiuuService.merchantId}${orderId}${FiuuService.Verify_Key}`;
+  const raw = `${amount}${this.merchantId}${orderId}${this.Verify_Key}`;
 
   return generateHash(raw)
 }
@@ -43,7 +43,7 @@ function generateVcode(amount, orderId) {
 
 function verifySKey(data) {
   const preSkey = generateHash(`${data.tranID}${data.orderid}${data.status}${data.domain}${data.amount}${data.currency}`)
-  const skey = generateHash(`${data.paydate}${data.domain}${preSkey}${data.appcode}${FiuuService.secretKey}`)
+  const skey = generateHash(`${data.paydate}${data.domain}${preSkey}${data.appcode}${this.secretKey}`)
 
   return skey === data.skey;
 }
