@@ -11,6 +11,8 @@ router
     // auth(config.auth_level.user),
     PaymentController.initiatePayment
   )
+  .post("/notification", PaymentController.fiuuNotification)
+  .post("/callback", PaymentController.fiuuCallback)
   .get(
     "/get-payment",
     auth(config.auth_level.user),

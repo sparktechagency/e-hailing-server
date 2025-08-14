@@ -16,7 +16,8 @@ const postNotification = catchAsync(async (title, message, toId = null) => {
     //send notifaction to user using firebase
     if(toId){
       
-      NotificationService.sendNotificationByUserId(toId, {title, message})
+      await NotificationService.sendNotificationByUserId(toId, {title, message})
+      console.log(`Notification send to user ${toId}`)
     }
   }catch(err){
     console.log("Firebase/postnotification: sending notification failed!")

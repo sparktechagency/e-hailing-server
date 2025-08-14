@@ -96,6 +96,7 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
 });
 
 const requestTrip = socketCatchAsync(async (socket, io, payload) => {
+  console.log(payload)
   validateSocketFields(socket, payload, [
     "pickUpAddress",
     "pickUpLat",
@@ -158,13 +159,16 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
   const availableDrivers = await User.find({
     role: EnumUserRole.DRIVER,
     isOnline: true,
-    isAvailable: true,
   }).lean();
+
+  console.log(availableDrivers)
 
   const driverIds = availableDrivers.map((driver) => driver._id.toString());
 
   driverIds.forEach((driverId) => {
     const driverSocket = payload.activeDrivers.get(driverId);
+
+    console.log(driverId)
 
     if (driverSocket) {
       driverSocket.emit(
@@ -176,6 +180,14 @@ const requestTrip = socketCatchAsync(async (socket, io, payload) => {
           data: trip,
         })
       );
+
+      
+
+  postNotification(
+    "Trip Available",
+    "A trip is available for you, grab it now!",
+   driverId
+  );
     }
   });
 
@@ -316,11 +328,11 @@ const acceptTrip = socketCatchAsync(async (socket, io, payload) => {
         `Driver ${result.driver.name} has accepted your trip`,
         result.user._id
       );
-      postNotification(
-        "Trip Accepted",
-        `You have accepted a trip from ${result.user.name}`,
-        result.driver._id
-      );
+      // postNotification(
+      //   "Trip Accepted",
+      //   `You have accepted a trip from ${result.user.name}`,
+      //   result.driver._id
+      // );
     }
   } catch (error) {
     console.log(error);

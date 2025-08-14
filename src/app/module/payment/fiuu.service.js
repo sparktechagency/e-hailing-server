@@ -24,8 +24,8 @@ const FiuuService = {
   Verify_Key:'dcbd7a3f0dbf412a0c2612337b28a9e9',
   secretKey:'441cb60ed3b0ee418fd41e13dd2b25df',
 
-  generateVcode,
-  verifySKey
+  generateVcode: generateVcode.bind(this),
+  verifySKey : verifySKey.bind(this)
 };
 
 
@@ -41,10 +41,9 @@ function generateVcode(amount, orderId) {
 
 //veerify key return from payment service to authenticate the transaction
 
-function verifySKey(data, secretKey) {
- 
+function verifySKey(data) {
   const preSkey = generateHash(`${data.tranID}${data.orderid}${data.status}${data.domain}${data.amount}${data.currency}`)
-  const skey = generateHash(`${data.paydate}${data.domain}${preSkey}${data.appcode}${secretKey}`)
+  const skey = generateHash(`${data.paydate}${data.domain}${preSkey}${data.appcode}${FiuuService.secretKey}`)
 
   return skey === data.skey;
 }

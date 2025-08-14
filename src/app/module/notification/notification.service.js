@@ -19,7 +19,9 @@ const sendNotificationByUserId = async (userId, payload)=>{
   validateFields(payload, ["title", "message"])
 
   if(user.token){
-    await sendNotification(token, payload)
+    console.log(user.token)
+    console.log("notification send: ", user._id)
+    await sendNotification(user.token, payload)
   }
 }
 

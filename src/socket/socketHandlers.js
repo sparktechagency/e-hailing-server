@@ -1,4 +1,5 @@
 const { EnumSocketEvent, EnumUserRole } = require("../util/enum");
+const postNotification = require("../util/postNotification");
 const socketCatchAsync = require("../util/socketCatchAsync");
 const SocketController = require("./socket.controller");
 
@@ -26,6 +27,7 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
   console.log("connected activeDrivers:", activeDrivers.size);
 
   socket.on(EnumSocketEvent.TRIP_REQUESTED, (payload) => {
+    console.log(payload)
     SocketController.requestTrip(socket, io, {
       ...payload,
       userId,

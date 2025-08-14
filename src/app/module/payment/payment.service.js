@@ -35,6 +35,23 @@ const initiatePayment = async ()=>{
     return `${fiuu_url}?${querystring.encode(data)}`
 }
 
+const fiuuNotification = async (payload)=>{
+  console.log(payload)
+
+  const isPaymentVerified = FiuuService.verifySKey(payload)
+
+  if(isPaymentVerified){
+    //changed payment status to database
+    console.log(isPaymentVerified)
+  }
+  
+  return
+}
+
+
+const fiuuCallback = async (payload)=>{
+  console.log(payload)
+}
 
 
 const getPayment = async (userData, query) => {
@@ -210,7 +227,9 @@ const PaymentService = {
   getPayment,
   getAllPayments,
   getDriverEarningReport,
-  initiatePayment
+  initiatePayment,
+  fiuuNotification,
+  fiuuCallback
 };
 
 module.exports = PaymentService;
