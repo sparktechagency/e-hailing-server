@@ -20,7 +20,7 @@ const config = {
   port: process.env.PORT,
   base_url: process.env.BASE_URL,
   database_url: process.env.MONGO_URL,
-  // firebaseKeys: firebaseJson,
+  firebaseKeys: process.env.FIREBASE_CREDENTIALS,
   auth_level: {
     user: ["USER", "DRIVER", "ADMIN", "SUPER_ADMIN"],
     driver: ["DRIVER", "ADMIN", "SUPER_ADMIN"],
