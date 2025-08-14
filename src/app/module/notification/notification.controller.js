@@ -19,6 +19,7 @@ const sendNotification  = catchAsync(async (req,res)=>{
 
 })
 
+//Test controller
 
 const testNotification  = catchAsync(async (req,res)=>{
 

@@ -6,7 +6,7 @@ const NotificationController = require("./notification.controller");
 const router = express.Router();
 
 router
-  
+  //test notification
   .post("/test-notification",
    NotificationController.testNotification
   )

@@ -5,7 +5,7 @@ const catchAsync = require("../util/catchAsync");
 
 //add new parameter token for send push notification to the client usign firebase
 
-const postNotification = catchAsync(async (title, message, toId = null, token = null) => {
+const postNotification = catchAsync(async (title, message, toId = null) => {
   if (!title || !message)
     throw new Error("Missing required fields: title, or message");
 
@@ -13,12 +13,13 @@ const postNotification = catchAsync(async (title, message, toId = null, token = 
   else await Notification.create({ toId, title, message });
 
   try {
-    
-    if(token){
+    //send notifaction to user using firebase
+    if(toId){
       
-     await NotificationService.sendNotification(token, {title, message})
+      NotificationService.sendNotificationByUserId(toId, {title, message})
     }
   }catch(err){
+    console.log("Firebase/postnotification: sending notification failed!")
     console.error(err)
   }
   
