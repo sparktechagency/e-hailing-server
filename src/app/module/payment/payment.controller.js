@@ -1,19 +1,18 @@
 const PaymentService = require("./payment.service");
 const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
-const NotificationService = require("../notification/notification.service");
 
-const initiatePayment = catchAsync(async(req, res)=>{
-  const url = await PaymentService.initiatePayment()
-  res.redirect(url)
+// const initiatePayment = catchAsync(async(req, res)=>{
+//   const url = await PaymentService.initiatePayment()
+//   res.redirect(url)
 
-  sendResponse(res, {
-    statusCode:200,
-    success:true,
-    message:"Payement request initiated",
-    data:url
-  })
-})
+//   sendResponse(res, {
+//     statusCode:200,
+//     success:true,
+//     message:"Payement request initiated",
+//     data:url
+//   })
+// })
 
 const fiuuNotification = catchAsync(async (req,res)=>{
   
@@ -22,7 +21,7 @@ const fiuuNotification = catchAsync(async (req,res)=>{
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message:" payment info found",
+    message:"payment info found",
     data:null
   })
 })
@@ -35,7 +34,7 @@ const fiuuCallback = catchAsync(async (req,res)=>{
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message:" payment info found",
+    message:"payment info found",
     data:null
   })
 })
@@ -77,7 +76,6 @@ const PaymentController = {
   getPayment,
   getAllPayments,
   getDriverEarningReport,
-  initiatePayment,
   fiuuNotification,
   fiuuCallback
 };

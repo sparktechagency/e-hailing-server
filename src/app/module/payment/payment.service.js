@@ -4,8 +4,6 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const { default: mongoose } = require("mongoose");
-const crypto = require('crypto')
-const querystring = require('querystring')
 const FiuuService = require("./fiuu.service");
 const {
   EnumPaymentStatus,
@@ -16,24 +14,25 @@ const {
 
 
 
-const initiatePayment = async ()=>{
-  //sandbox url for fiuu payment srevice
-    const fiuu_url = `https://sandbox-payment.fiuu.com/RMS/pay/${FiuuService.merchantId}/`
 
-    const data = {
-      merchant_ID:FiuuService.merchantId,
-      orderid:'101',
-      channel:'credit',
-      currency:"MY",
-      amount:11,
-      bill_name:"Sahin",
-      bill_email:"abc@example.com",
-      bill_mobile:'047843932033',
-      vcode: FiuuService.generateVcode(11, '101')
-    }
+// const initiatePayment = async ()=>{
+//   //sandbox url for fiuu payment srevice
+//     const fiuu_url = `https://sandbox-payment.fiuu.com/RMS/pay/${FiuuService.merchantId}/`
 
-    return `${fiuu_url}?${querystring.encode(data)}`
-}
+//     const data = {
+//       merchant_ID:FiuuService.merchantId,
+//       orderid:'101',
+//       channel:'credit',
+//       currency:"MY",
+//       amount:11,
+//       bill_name:"Sahin",
+//       bill_email:"abc@example.com",
+//       bill_mobile:'047843932033',
+//       vcode: FiuuService.generateVcode(11, '101')
+//     }
+
+//     return `${fiuu_url}?${querystring.encode(data)}`
+// }
 
 const fiuuNotification = async (payload)=>{
   console.log(payload)
@@ -227,7 +226,6 @@ const PaymentService = {
   getPayment,
   getAllPayments,
   getDriverEarningReport,
-  initiatePayment,
   fiuuNotification,
   fiuuCallback
 };
